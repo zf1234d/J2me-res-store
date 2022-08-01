@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.J2ME下载" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/white3</item>
+        <item name="colorPrimaryVariant">@color/white2</item>
+        <item name="colorOnPrimary">@color/white1</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/black1</item>
+        <item name="colorSecondaryVariant">@color/black1</item>
+        <item name="colorOnSecondary">@color/black1</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="21">?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
+        <item name="android:navigationBarColor" tools:targetApi="21">?attr/colorPrimary</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>
