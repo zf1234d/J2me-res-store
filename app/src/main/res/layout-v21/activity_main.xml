@@ -13,6 +13,7 @@
         android:id="@+id/progressBar2"
         style="?android:attr/progressBarStyleHorizontal"
         android:indeterminate="true"
+        android:indeterminateTint="@color/black3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
