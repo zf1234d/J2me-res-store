@@ -3,6 +3,8 @@
     <string name="home">主页</string>
     <string name="archive">仓库</string>
     <string name="settings">设置</string>
+    <string name="findNewArchive">发现新库存，点击同步</string>
+    <string name="findNewApp">发现新版本，点击更新</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- Preference Titles -->

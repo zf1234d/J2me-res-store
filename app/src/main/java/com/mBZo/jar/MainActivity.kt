@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -22,7 +23,8 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), View.OnClickListener  {
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -32,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         val nav: BottomNavigationView = findViewById(R.id.home_nav)
         val loading: ProgressBar = findViewById(R.id.progressBar2)
         val versionCode: Int = BuildConfig.VERSION_CODE;
-        val versionName: String = BuildConfig.VERSION_NAME;
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
         mFragments.add(settingrootFragment())
@@ -64,30 +65,18 @@ class MainActivity : AppCompatActivity() {
         })
         //结束了，这样就绑定好了
 
-        //获取软件版本
-        @SuppressLint("SetTextI18n")
-        fun getverinfo() {
-            try {
-                //重复的来获取
-                val versioncard: TextView = findViewById(R.id.state3)
-                versioncard.text = "$versionName ($versionCode)"
-            } catch (e: Exception) {
-                Timer().schedule(50) {
-                    getverinfo()
-                }
-            }
-        }
-        getverinfo()
         //联网获取软件配置信息
         fun updateConfigSave(uc1: String, uc2: String, uc3: String, uc4: String, uc5: String, data: String) {
             runOnUiThread {
+                val btn1: MaterialCardView = findViewById(R.id.btn1)
+                btn1.setOnClickListener(this)
                 val loadImg: ImageView = findViewById(R.id.state1)
                 val loadInfo: TextView = findViewById(R.id.state2)
                 val noticeCard: MaterialCardView = findViewById(R.id.state4)
                 val noticeInfo: TextView = findViewById(R.id.state5)
                 if (versionCode > uc4.toInt()) {
                     if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
-                        easyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
+                        lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
                     }
                     val localAuth = File("${filesDir.absolutePath}/mBZo/java/list/0.list",).readText()
                     if (localAuth == uc3) {
@@ -98,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                         loading.visibility = View.GONE
                     }
                     else{
-                        loadInfo.text = "发现新库存，点击同步"
+                        loadInfo.text = resources.getString(R.string.findNewArchive)
                         Glide.with(this).load(R.drawable.ic_baseline_update_24).into(loadImg);
                         noticeInfo.text = uc1
                         noticeCard.visibility = View.VISIBLE
@@ -106,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 else{
-                    loadInfo.text = "发现新版本，点击更新"
+                    loadInfo.text = resources.getString(R.string.findNewApp)
                     Glide.with(this).load(R.drawable.ic_baseline_update_24).into(loadImg);
                     noticeInfo.text = uc1
                     noticeCard.visibility = View.VISIBLE
@@ -138,8 +127,18 @@ class MainActivity : AppCompatActivity() {
         updateConfig()
         //检查更新结束
     }
-}
 
+    override fun onClick(p0: View?) {
+        when (p0?.id) {
+            R.id.btn1 -> {
+                val loadInfo: TextView = findViewById(R.id.state2)
+                if (loadInfo.text == getString(R.string.findNewArchive)){
+
+                }
+            }
+        }
+    }
+}
 
 
 class MainFragmentPagerAdapter(fragmentActivity: FragmentActivity, private val mFragments: List<Fragment>
@@ -154,10 +153,12 @@ class MainFragmentPagerAdapter(fragmentActivity: FragmentActivity, private val m
 }
 
 
-fun easyWriteFile(path: String,name: String,content: String){
+fun lazyWriteFile(path: String,name: String,content: String){
     File(path).mkdirs()
-    File(name).writeText(content)
+    File("$path/$name").writeText(content)
 }
+
+
 
 
 

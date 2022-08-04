@@ -24,6 +24,7 @@
 
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -34,11 +35,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:clickable="true"
                     android:orientation="horizontal"
                     android:padding="16dp"
-                    android:onClick="btn1Function"
-                    android:focusable="true"
                     tools:ignore="UsingOnClickInXml">
 
                     <ImageView
