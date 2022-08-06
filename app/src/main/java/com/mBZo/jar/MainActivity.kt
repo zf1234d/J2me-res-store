@@ -18,7 +18,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.*
 import java.io.File
 import android.util.Base64
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.multidex.MultiDex
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.nio.charset.Charset
 import kotlin.collections.ArrayList
 
@@ -49,6 +54,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
         mFragments.add(settingrootFragment())
+        viewpager.offscreenPageLimit = 3
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         //设置默认主页为第二个
@@ -305,9 +311,18 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val loading: ProgressBar = activity.findViewById(R.id.progressBar2)
     val loadImg: ImageView = activity.findViewById(R.id.state1)
     val loadInfo: TextView = activity.findViewById(R.id.state2)
+    val recyclerView: RecyclerView = activity.findViewById(R.id.recyclerView)
     loadInfo.text = "已连接"
     Glide.with(activity).load(R.drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE
+    val textList = arrayListOf("我的关注","通知开关", "我的徽章", "意见反馈", "我要投稿",
+        "我的关注","通知开关", "我的徽章", "意见反馈", "我要投稿",
+        "我的关注","通知开关","我的徽章","意见反馈","我要投稿")
+    //设置recyclerView
+    val layoutManager = LinearLayoutManager(activity)
+    recyclerView.layoutManager = layoutManager
+    val adapter = RecyclerAdapter(textList)
+    recyclerView.adapter = adapter
 }
 
 
@@ -317,5 +332,30 @@ fun dcBase64(string: String): String {
     return  String(Base64.decode(string.toByteArray(),Base64.NO_WRAP))
 }
 
+//仓库的RecyclerView
+class RecyclerAdapter(private val textList: ArrayList<String>) :
+    RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): MyViewHolder {
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.recycler_item, parent, false)
+        return MyViewHolder(view)
+    }
 
+    override fun getItemCount(): Int = textList.size ?: 0
 
+    override fun onBindViewHolder(holder: RecyclerAdapter.MyViewHolder, position: Int) {
+        val textpos = textList[position]
+        holder.title.text = textpos
+        holder.itemView.setOnClickListener {
+            Toast.makeText(holder.itemView.context, "${holder.title.text}", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val title: TextView = itemView.findViewById(R.id.archiveItemName)
+    }
+}

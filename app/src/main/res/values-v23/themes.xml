@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.J2ME下载" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+
+    <style name="Theme.J2ME下载" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/black4</item><!-- 这个还是dialog按钮颜色-->
         <item name="colorPrimaryVariant">@color/white2</item>
@@ -10,8 +11,10 @@
         <item name="colorSecondaryVariant">@color/white3</item>
         <item name="colorOnSecondary">@color/black1</item>
         <!-- Status bar color. -->
-        <item name="android:windowTranslucentStatus" tools:targetApi="19">true</item>
-        <item name="android:windowTranslucentNavigation" tools:targetApi="19">true</item>
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">?attr/colorSecondaryVariant</item>
+        <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:fitsSystemWindows">true</item>
         <!-- Customize your theme here. -->
     </style>

@@ -10,15 +10,18 @@
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_select_setting.xml" value="0.1185" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/nav_statelist.xml" value="0.123" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/activity_main.xml" value="0.1" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_archive.xml" value="0.1" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_home.xml" value="0.21240942028985507" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_j2medownload.xml" value="0.21240942028985507" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v23/activity_main.xml" value="0.10989583333333333" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_archive.xml" value="0.21240942028985507" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_home.xml" value="0.21240942028985507" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_j2medownload.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_searchpage.xml" value="0.11197916666666667" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_searchpage.xml" value="0.1" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_settingroot.xml" value="0.21240942028985507" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/layout.xml" value="0.1" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/recycler_item.xml" value="0.1" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/menu/home_nav_menu.xml" value="0.1" />
         <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/xml/root_preferences.xml" value="0.21240942028985507" />
       </map>
