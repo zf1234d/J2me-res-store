@@ -3,6 +3,7 @@ package com.mBZo.jar
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.util.Base64
 import android.view.LayoutInflater
@@ -110,6 +111,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                             noticeCard.visibility = View.VISIBLE
                             archiveNum = uc2.toInt()
                             archiveB64C = data
+                            archiveVer = uc3
                             nowReadArchiveList(this)
                         }
                         else{
@@ -157,6 +159,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         //检查更新结束
     }
     //点击事件
+    //TODO 要加功能
     override fun onClick(p0: View?) {
         when (p0?.id) {
             R.id.btn1 -> {
@@ -167,6 +170,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
                 else if (loadInfo.text == "已连接"){
                     MaterialAlertDialogBuilder(this)
+                        .setMessage("版本\n${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
                         .setPositiveButton("更改库存"){_,_ -> syncArchive(this,"已连接",R.drawable.ic_baseline_check_24)}
                         .show()
                 }
@@ -203,7 +207,6 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
     loadInfo.text = activity.getString(R.string.updateNewArchive)
     Glide.with(activity).load(R.drawable.ic_baseline_query_builder_24).into(loadImg)
     loading.visibility = View.VISIBLE
-    lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
     //批量下载一串路径
     fun processDownloadArchive(urlPath: Array<String>) {
         var process = 0
@@ -292,7 +295,10 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
             MaterialAlertDialogBuilder(activity)
                 .setTitle("可额外添加这些来源的库存")
                 .setMultiChoiceItems(list3,null){_,index,state ->  list4[index] = state}
-                .setPositiveButton("开始同步"){ _,_ -> startDownloadArchive(list1,list2,list4)}
+                .setPositiveButton("开始同步"){ _,_ ->
+                    lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
+                    startDownloadArchive(list1,list2,list4)
+                }
                 .show()
         }
     }
@@ -371,7 +377,7 @@ class RecyclerAdapter(private val activity: AppCompatActivity,private val nameLi
 
     override fun getItemCount(): Int = nameList.size
 
-    override fun onBindViewHolder(holder: RecyclerAdapter.MyViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val itemName = nameList[position]
         val itemFrom = fromList[position]
         //显示
