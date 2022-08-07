@@ -1,14 +1,22 @@
 package com.mBZo.jar
 
 import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Base64
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.multidex.MultiDex
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
@@ -17,15 +25,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.*
 import java.io.File
-import android.util.Base64
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.widget.Toast
-import androidx.multidex.MultiDex
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import java.nio.charset.Charset
-import kotlin.collections.ArrayList
 
 
 var archiveNum=0
@@ -82,6 +82,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
             }
         })
         //结束了，这样就绑定好了
+
+        //滑嘛？
+        val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
+        val usefulFun = spfRecord.getBoolean("viewpagerIsBad",false)
+        if (usefulFun) {
+            viewpager.isUserInputEnabled = false
+        }
 
         //联网获取软件配置信息
         fun updateConfig() {
@@ -203,8 +210,7 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
         fun getOkHttp2File(url: String){
             fun saveGetAsFile(data: String) {
                 activity.runOnUiThread {
-                    File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText(dcBase64(data),
-                        Charset.defaultCharset())
+                    File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText("\n${dcBase64(data)}", Charset.forName("UTF-8"))
                     process += 1
                     //时间可能很长啊，记录个进度，没毛病啊
                     tip = "${activity.getString(R.string.updateNewArchive)}($process/${urlPath.size})"
@@ -312,16 +318,35 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val loadImg: ImageView = activity.findViewById(R.id.state1)
     val loadInfo: TextView = activity.findViewById(R.id.state2)
     val recyclerView: RecyclerView = activity.findViewById(R.id.recyclerView)
+    val name = mutableListOf<String>()
+    val from = mutableListOf<String>()
+    val path = mutableListOf<String>()
     loadInfo.text = "已连接"
     Glide.with(activity).load(R.drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE
-    val textList = arrayListOf("我的关注","通知开关", "我的徽章", "意见反馈", "我要投稿",
-        "我的关注","通知开关", "我的徽章", "意见反馈", "我要投稿",
-        "我的关注","通知开关","我的徽章","意见反馈","我要投稿")
+    //读文件并转换成列表然后循环判断类型
+    for (str in File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()){
+        if (str.substringAfter("\"name\"", "pass") != "pass"){
+            name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
+            //这里加个容错，防止库存里有鸡汤
+            if (name.size-from.size == 2){
+                from.add("损坏")
+            }
+            if (name.size-path.size == 2){
+                path.add("损坏")
+            }
+            //之前基于androlua的版本其实就有这个功能，但lua的数组比较灵活，不需要像kotlin这样进行判断
+            //TODO 会不会卡啊？之后加个开关吧
+        }
+        else if (str.substringAfter("\"from\"", "pass") != "pass"){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
+        else if (str.substringAfter("\"url\"", "pass") != "pass"){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
+
+    }
+
     //设置recyclerView
     val layoutManager = LinearLayoutManager(activity)
     recyclerView.layoutManager = layoutManager
-    val adapter = RecyclerAdapter(textList)
+    val adapter = RecyclerAdapter(activity,name,from,path)
     recyclerView.adapter = adapter
 }
 
@@ -333,7 +358,7 @@ fun dcBase64(string: String): String {
 }
 
 //仓库的RecyclerView
-class RecyclerAdapter(private val textList: ArrayList<String>) :
+class RecyclerAdapter(private val activity: AppCompatActivity,private val nameList: List<String>,private  val fromList: List<String>,private val pathList: List<String>) :
     RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -344,18 +369,26 @@ class RecyclerAdapter(private val textList: ArrayList<String>) :
         return MyViewHolder(view)
     }
 
-    override fun getItemCount(): Int = textList.size ?: 0
+    override fun getItemCount(): Int = nameList.size
 
     override fun onBindViewHolder(holder: RecyclerAdapter.MyViewHolder, position: Int) {
-        val textpos = textList[position]
-        holder.title.text = textpos
+        val itemName = nameList[position]
+        val itemFrom = fromList[position]
+        //显示
+        holder.name.text = itemName
+        holder.from.text = itemFrom
+        //点击
         holder.itemView.setOnClickListener {
-            Toast.makeText(holder.itemView.context, "${holder.title.text}", Toast.LENGTH_SHORT)
-                .show()
+            val intent = Intent(holder.itemView.context, StoreActivity::class.java)
+            intent.putExtra("name",nameList[position])
+            intent.putExtra("from",fromList[position])
+            intent.putExtra("path",pathList[position])
+            activity.startActivity(intent)
         }
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val title: TextView = itemView.findViewById(R.id.archiveItemName)
+        val name: TextView = itemView.findViewById(R.id.archiveItemName)
+        val from: TextView = itemView.findViewById(R.id.archiveItemFrom)
     }
 }
