@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.J2ME下载" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+    <style name="Theme.J2ME下载" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/black4</item><!-- 这个还是dialog按钮颜色-->
         <item name="colorPrimaryVariant">@color/white2</item>

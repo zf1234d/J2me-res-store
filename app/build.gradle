@@ -10,7 +10,7 @@ android {
         applicationId "com.mBZo.jar"
         minSdk 16
         targetSdk 33
-        versionCode 59
+        versionCode 56
         versionName "3.0-beta1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true

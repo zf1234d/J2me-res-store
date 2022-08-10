@@ -1,29 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white2">
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appbar"
+    android:layout_height="match_parent">
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="192dp"
-        android:background="?attr/colorPrimaryVariant"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.CollapsingToolbarLayout
+        android:layout_height="match_parent"
+        android:background="@color/white2"
+        android:orientation="vertical">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:contentScrim="?attr/colorPrimaryVariant"
-            app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
-            app:toolbarId="@+id/toolbar">
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
+            android:layout_height="?attr/actionBarSize"
+            app:title="详情"/>
+        <ProgressBar
+            android:id="@+id/storeLoadingMain"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:indeterminateTint="@color/black3"
+            android:indeterminate="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize" />
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_marginLeft="18dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginRight="18dp"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:id="@+id/ico"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:visibility="gone"
+                        android:layout_gravity="center"
+                        android:layout_marginRight="24dp"
+                        android:contentDescription="@string/icon" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/storeTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black1"
+                            android:layout_marginBottom="16dp"
+                            android:textSize="18sp"/>
+                        <TextView
+                            android:id="@+id/storeFrom"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black2"
+                            android:textSize="16sp"/>
+                    </LinearLayout>
+                </LinearLayout>
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/storeImages"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:layout_marginBottom="24dp"
+                    android:scrollbarSize="2dp"
+                    android:scrollbars="horizontal" />
+                <TextView
+                    android:id="@+id/storeInfo"
+                    android:visibility="gone"
+                    android:layout_marginBottom="24dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black1"/>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
 
+    </LinearLayout>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="24dp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:contentDescription="@string/download"
+        android:focusable="true"
+        app:backgroundTint="@color/black4"
+        app:rippleColor="@color/black2"
+        app:srcCompat="@drawable/ic_baseline_cloud_download_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

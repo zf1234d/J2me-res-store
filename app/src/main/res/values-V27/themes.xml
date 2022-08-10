@@ -9,7 +9,7 @@
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/black1</item>
         <item name="colorSecondaryVariant">@color/white3</item>
-        <item name="colorOnSecondary">@color/black1</item>
+        <item name="colorOnSecondary">@color/white2</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <item name="android:windowLightStatusBar">true</item>
