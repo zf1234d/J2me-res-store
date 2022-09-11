@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 59,
+      "versionCode": 56,
       "versionName": "3.0-beta1",
-      "outputFile": "app-release.apk"
+      "outputFile": "J2ME下载_3.0-beta1_release.apk"
     }
   ],
   "elementType": "File"

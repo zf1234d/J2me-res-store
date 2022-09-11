@@ -1,6 +1,7 @@
 package com.mBZo.jar
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -10,10 +11,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -68,16 +71,23 @@ class StoreActivity : AppCompatActivity() {
 }
 
 //统一回调
-fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,about: String?,loading: Boolean) {
+fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,about: String?,loading: Boolean) {
     activity.runOnUiThread {
         val info = activity.findViewById<TextView>(R.id.storeInfo)
         val icon = activity.findViewById<ImageView>(R.id.ico)
         val loadingProgressBar = activity.findViewById<ProgressBar>(R.id.storeLoadingMain)
         val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
+        val downloadFab: FloatingActionButton = activity.findViewById(R.id.floatingActionButton)
         //简介
         if (about != null){
             info.visibility = View.VISIBLE
             info.text = about
+            info.setOnClickListener{
+                MaterialAlertDialogBuilder(activity)
+                    .setTitle("简介")
+                    .setMessage(about)
+                    .show()
+            }
         }
         //图标
         if (iconLink != null){
@@ -96,6 +106,44 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
             }
         }
         //下载链接
+        if (linkNameList != null) {
+            if (linkList != null) {
+                //跳转浏览器
+                fun web2download(link: String){
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                        intent.data = Uri.parse(link)
+                        startActivity(activity,intent,null)
+                    } catch (e: Exception) {
+                        println("当前手机未安装浏览器")
+                    }
+                }
+                //处理下载相关交互
+                downloadFab.visibility = View.VISIBLE
+                downloadFab.setOnClickListener {
+                    if (linkNameList.size > 1) {
+                        MaterialAlertDialogBuilder(activity)
+                            .setTitle("下载列表")
+                            .setItems(linkNameList.toTypedArray()){_,p ->
+                                MaterialAlertDialogBuilder(activity)
+                                    .setTitle("详情")
+                                    .setMessage("\n${linkNameList[p]}")
+                                    .setPositiveButton("立即下载"){_,_ -> web2download(linkList[p]) }
+                                    .show()
+                            }
+                            .show()
+                    }
+                    else {
+                        MaterialAlertDialogBuilder(activity)
+                            .setTitle("详情")
+                            .setMessage("\n${linkNameList[0]}")
+                            .setPositiveButton("立即下载"){_,_ -> web2download(linkList[0]) }
+                            .show()
+                    }
+                }
+            }
+        }
         //隐藏加载
         if (loading){ loadingProgressBar.visibility = View.INVISIBLE }
     }
@@ -103,7 +151,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 
 private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?) {
     if (path != null){
-        val addPath = "https://od.bzyun.top/api/?path=/J2ME应用商店/$path/$name"
+        val addPath = "https://od.bzyun.top/api/?path=/J2ME应用商店$path/$name"
         Thread {
             try {
                 val client = OkHttpClient()
@@ -114,6 +162,8 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
                 //解析
                 val data = JSONObject(response.body.string()).getJSONObject("folder").getJSONArray("value")
                 val downLinkList = mutableListOf<String>()
+                val downLinkNameList = mutableListOf<String>()
+                val fileSizeList = mutableListOf<String>()
                 val imagesList = mutableListOf<String>()
                 var temp:String
                 for (index in 1..data.length()){
@@ -122,29 +172,31 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
                         if (name != null){
                             //下载列表
                             if (temp.substringAfter(name)!=temp){//确认是可下载文件
-                                downLinkList.add(temp.substringAfter(name+"_"))
+                                downLinkNameList.add(temp.substringAfter(name+"_"))
+                                downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
+                                fileSizeList.add(data.getJSONObject(index-1).getString("name").toString())
                             }
                             //预览图
                             if (temp.substringAfter("img")!=temp && temp.substringAfter("img")!="ErrLog.txt"){
-                                imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp")
+                                imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
                             }
                             //图标
-                            if (temp.substringAfter("pic")!=temp && temp.substringAfter("pic")!="ErrLog.txt"){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,false)}
+                            if (temp.substringAfter("pic")!=temp && temp.substringAfter("pic")!="ErrLog.txt"){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,false)}
                             //简介
                             if (temp=="gameInfo.html"){
                                 val requestInfo = Request.Builder()
-                                    .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp")
+                                    .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
                                     .build()
                                 thread {
                                     val responseInfo = client.newCall(requestInfo).execute()
-                                    contentFormat(activity,null,null,null,responseInfo.body.string(),true)
+                                    contentFormat(activity,null,null,null,null,responseInfo.body.string(),true)
                                 }
                             }
                             //一次判断结束
                         }
                     }
                 }//循环结束
-                contentFormat(activity,null,imagesList,downLinkList,null,false)
+                contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,false)
             } catch (e: Exception) {
                 apiDecodeBzyun(activity, path,name)
             }

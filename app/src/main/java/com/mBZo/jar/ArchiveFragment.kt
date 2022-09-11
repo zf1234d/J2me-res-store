@@ -1,10 +1,10 @@
 package com.mBZo.jar
 
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.appcompat.widget.SearchView
+import com.google.android.material.appbar.AppBarLayout
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -37,6 +37,39 @@ class ArchiveFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_archive, container, false)
     }
 
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val appbar: AppBarLayout = view.findViewById(R.id.appbar)
+
+    }
+
+
+
+
+    override fun onPrepareOptionsMenu(menu: Menu){
+        val searchView = menu.findItem(R.id.menu_search_bar).actionView
+        val searchBar = searchView?.findViewById<SearchView>(R.id.menu_search_bar)
+        searchView?.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener{
+            override fun onViewAttachedToWindow(p0: View) {
+            }
+
+            override fun onViewDetachedFromWindow(p0: View) {
+            }
+
+        })
+        searchBar?.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return true
+            }
+        })
+    }
+
+
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -57,3 +90,4 @@ class ArchiveFragment : Fragment() {
             }
     }
 }
+

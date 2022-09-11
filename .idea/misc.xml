@@ -3,38 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_archive_select.xml" value="0.122" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_home_select.xml" value="0.122" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_launcher_background.xml" value="0.122" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.122" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_select_setting.xml" value="0.1185" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/nav_statelist.xml" value="0.123" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/activity_main.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/activity_store.xml" value="0.10989583333333333" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_archive.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_home.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_j2medownload.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_settingroot.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v23/activity_main.xml" value="0.10989583333333333" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/activity_main.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/activity_store.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_archive.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_home.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_j2medownload.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_searchpage.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/fragment_settingroot.xml" value="0.21240942028985507" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/img_item.xml" value="0.23854166666666668" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/layout.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/recycler_item.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/menu/home_nav_menu.xml" value="0.1" />
-        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/xml/root_preferences.xml" value="0.21240942028985507" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_baseline_archive_24.xml" value="0.2585" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.2585" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout-v21/fragment_archive.xml" value="0.253125" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/layout/searchbar.xml" value="0.1" />
+        <entry key="..\:/Users/AndroidStudioProjects/J2ME2/app/src/main/res/menu/search_bar.xml" value="0.10989583333333333" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
-    <output url="file://$PROJECT_DIR$/build/classes" />
-  </component>
-  <component name="ProjectType">
-    <option name="id" value="Android" />
-  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
 </project>

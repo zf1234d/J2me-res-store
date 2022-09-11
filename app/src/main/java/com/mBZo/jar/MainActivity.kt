@@ -6,15 +6,12 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.view.*
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.multidex.MultiDex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.*
 import java.io.File
 import java.nio.charset.Charset
+import java.util.Locale.filter
 
 
 var archiveNum=0
@@ -293,7 +291,7 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
                 temp = temp.substringAfter("}")
             }
             MaterialAlertDialogBuilder(activity)
-                .setTitle("可额外添加这些来源的库存")
+                .setTitle("额外库存源(可不选)")
                 .setMultiChoiceItems(list3,null){_,index,state ->  list4[index] = state}
                 .setPositiveButton("开始同步"){ _,_ ->
                     lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
@@ -364,7 +362,7 @@ fun dcBase64(string: String): String {
 }
 
 //仓库的RecyclerView
-class RecyclerAdapter(private val activity: AppCompatActivity,private val nameList: List<String>,private  val fromList: List<String>,private val pathList: List<String>) :
+public class RecyclerAdapter(private val activity: AppCompatActivity,private val nameList: List<String>,private  val fromList: List<String>,private val pathList: List<String>) :
     RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -393,8 +391,28 @@ class RecyclerAdapter(private val activity: AppCompatActivity,private val nameLi
         }
     }
 
+    public fun filter(keyWord: String): Triple<List<String>,List<String>,List<String>> {
+        // 过滤原本的列表，返回一个新的列表
+        val filterNameList = mutableListOf<String>()
+        val filterFromList = mutableListOf<String>()
+        val filterPathList = mutableListOf<String>()
+
+        for (i in 1..nameList.size) {
+            if (nameList[i-1].contains(keyWord)){
+                filterNameList.add(nameList[i-1])
+                filterFromList.add(fromList[i-1])
+                filterPathList.add(pathList[i-1])
+            }
+        }
+        return Triple(filterNameList,filterFromList,filterPathList)
+    }
+
+
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: TextView = itemView.findViewById(R.id.archiveItemName)
         val from: TextView = itemView.findViewById(R.id.archiveItemFrom)
     }
 }
+
+
+
