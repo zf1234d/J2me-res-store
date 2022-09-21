@@ -2,9 +2,11 @@ package com.mBZo.jar
 
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.appcompat.widget.SearchView
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -45,29 +47,6 @@ class ArchiveFragment : Fragment() {
     }
 
 
-
-
-    override fun onPrepareOptionsMenu(menu: Menu){
-        val searchView = menu.findItem(R.id.menu_search_bar).actionView
-        val searchBar = searchView?.findViewById<SearchView>(R.id.menu_search_bar)
-        searchView?.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener{
-            override fun onViewAttachedToWindow(p0: View) {
-            }
-
-            override fun onViewDetachedFromWindow(p0: View) {
-            }
-
-        })
-        searchBar?.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return true
-            }
-        })
-    }
 
 
     companion object {

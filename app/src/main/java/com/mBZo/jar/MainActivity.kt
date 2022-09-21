@@ -9,6 +9,7 @@ import android.util.Base64
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
@@ -31,6 +32,7 @@ var archiveNum=0
 var archiveB64C=""
 var archiveVer=""
 var otaUrl=""
+var cloudver=0
 const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b822b9563/_apis/git/repositories/589e5978-bff8-4f4d-a328-c045f4237299/items?path="
 
 
@@ -82,12 +84,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         })
         //结束了，这样就绑定好了
 
-        //滑嘛？
+        //允许左右滑动嘛？
         val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
         val usefulFun = spfRecord.getBoolean("viewpagerIsBad",false)
         if (usefulFun) {
             viewpager.isUserInputEnabled = false
         }
+
 
         //联网获取软件配置信息
         fun updateConfig() {
@@ -110,6 +113,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                             archiveNum = uc2.toInt()
                             archiveB64C = data
                             archiveVer = uc3
+                            cloudver = uc4.toInt()
                             nowReadArchiveList(this)
                         }
                         else{
@@ -168,7 +172,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
                 else if (loadInfo.text == "已连接"){
                     MaterialAlertDialogBuilder(this)
-                        .setMessage("版本\n${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE})\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
+                        .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端$cloudver)\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
                         .setPositiveButton("更改库存"){_,_ -> syncArchive(this,"已连接",R.drawable.ic_baseline_check_24)}
                         .show()
                 }
@@ -176,7 +180,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         }
     }
 }
-
 
 class MainFragmentPagerAdapter(fragmentActivity: FragmentActivity, private val mFragments: List<Fragment>
 ) : FragmentStateAdapter(fragmentActivity) {
