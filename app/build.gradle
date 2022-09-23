@@ -40,7 +40,7 @@ android {
     android.applicationVariants.all {
         variant ->
             variant.outputs.all {
-                outputFileName = "J2MESTORE_${variant.versionName}_${variant.name}.apk"
+                outputFileName = "J2ME下载_${variant.versionName}_${variant.name}.apk"
             }
     }
 
