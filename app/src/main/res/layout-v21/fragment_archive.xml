@@ -21,16 +21,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:contentScrim="?attr/colorPrimaryVariant"
-                app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
+                app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
                 app:title="仓库"
                 app:toolbarId="@+id/toolbar">
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/archiveToolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize"
-                    app:layout_collapseMode="pin"
-                    app:menu="@menu/search_bar"/>
+                    android:layout_height="?attr/actionBarSize"/>
             </com.google.android.material.appbar.CollapsingToolbarLayout>
 
         </com.google.android.material.appbar.AppBarLayout>
@@ -42,7 +40,5 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
 </FrameLayout>
