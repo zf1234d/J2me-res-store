@@ -11,14 +11,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.internal.http.HTTP_UNSUPPORTED_MEDIA_TYPE
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
@@ -44,6 +48,7 @@ class StoreActivity : AppCompatActivity() {
         //通过from判断解析方法吧，找不到对应from就返回不支持
         if (from != null) {//虽然做了防毒，但不这样写不能编译
             if (from.substringAfter("没空云", "pass") != "pass"){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
+            else if (from.substringAfter("Joyin的jar游戏下载站", "pass") != "pass"){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
             else if (from=="损坏") {//库存本身出意外都是在这里解决
                 MaterialAlertDialogBuilder(this)
                     .setCancelable(false)
@@ -71,7 +76,7 @@ class StoreActivity : AppCompatActivity() {
 }
 
 //统一回调
-fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,about: String?,loading: Boolean) {
+fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,about: String?,loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
         val info = activity.findViewById<TextView>(R.id.storeInfo)
         val icon = activity.findViewById<ImageView>(R.id.ico)
@@ -116,7 +121,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                         intent.data = Uri.parse(link)
                         startActivity(activity,intent,null)
                     } catch (e: Exception) {
-                        println("当前手机未安装浏览器")
+                        Toast.makeText(activity,"当前手机未安装浏览器", Toast.LENGTH_SHORT).show()
                     }
                 }
                 //处理下载相关交互
@@ -146,6 +151,86 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
         }
         //隐藏加载
         if (loading){ loadingProgressBar.visibility = View.INVISIBLE }
+    }
+}
+
+//解析的前置模块
+var lanzouApiInfo:String = ""
+fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
+    //蓝奏云解析kotlin版 by.mBZo ver1.0
+    Thread {
+        try {
+            //第一次请求
+            val client = OkHttpClient()
+            var request = Request.Builder()
+                .url(url)
+                .build()
+            var response = client.newCall(request).execute()
+            var finLink = response.body.string()
+            if(finLink.substringAfter("passwd")==finLink) {
+                //无密码
+                //获取信息
+                val info = finLink.split("<span class=\"p7\">")
+                lanzouApiInfo = "${info[1].split("<br>")[0]}\n${info[2].split("<br>")[0]}\n${info[3].split("<br>")[0]}\n${info[4].split("<br>")[0]}\n${info[5].split("<br>")[0]}".replace("</span>","",ignoreCase = true).replace("<font>","",ignoreCase = true).replace("</font>","",ignoreCase = true)
+                //拼接二次请求连接
+                finLink = "https://wwr.lanzoux.com${finLink.split("</iframe>")[1].split("src=\"")[1].split("\"")[0]}"
+                //无密码状态二次请求
+                request = Request.Builder()
+                    .url(finLink)
+                    .build()
+                response = client.newCall(request).execute()
+                //拼接最终请求数据
+                finLink = response.body.string()
+                val data1 = finLink.split("var ajaxdata = '")[1].split("';")[0]
+                val data2 = finLink.split("var vsign = '")[1].split("';")[0]
+                val data3 = finLink.split("var awebsigna = '")[1].split("';")[0]
+                val data4 = finLink.split("var cwebsignkeyc = '")[1].split("';")[0]
+                finLink = "action=downprocess&signs=$data1&sign=$data2&websign=$data3&websignkey=$data4&ves=1"
+            }
+            else {
+                //有密码,拼接请求数据
+                lanzouApiInfo = finLink.split("<meta name=\"description\" content=\"")[1].split("|\"")[0]
+                finLink = "${finLink.split("data : \'")[1].split("\'+pwd,")[0]}$pwd"
+            }
+            //发起最终请求
+            request = Request.Builder()
+                .url("https://wwr.lanzoux.com/ajaxm.php")
+                .header("referer", url)
+                .post(finLink.toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+                .build()
+            response = client.newCall(request).execute()
+            finLink = response.body.string()
+            finLink = "${JSONObject(finLink).getString("dom")}/file/${JSONObject(finLink).getString("url")}"
+            activity.runOnUiThread{
+                if (type == "only"){
+                    //作为唯一信息来源
+                    val linkNameList = listOf<String>(lanzouApiInfo)
+                    val linkList = listOf<String>(finLink)
+                    contentFormat(activity,null,null,linkList,linkNameList, lanzouApiInfo,true)
+                }
+                else if (type == "open"){
+                    //直接跳转浏览器
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                        intent.data = Uri.parse(finLink)
+                        startActivity(activity,intent,null)
+                    } catch (e: Exception) {
+                        Toast.makeText(activity,"当前手机未安装浏览器",Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }catch (e: Exception) {
+            lanzouApi(activity,type,url,pwd)
+        }
+    }.start()
+}
+
+
+//各种解析
+private fun apiDecodeJoyin(activity: StoreActivity, path: String?) {
+    if (path != null) {
+        lanzouApi(activity,"only",path,"1234")
     }
 }
 
@@ -203,7 +288,7 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
         }.start()
     }
 }
-
+//***解析部分到此为止***
 
 //预览图显示
 class ImgShowRecyclerAdapter(private val activity: AppCompatActivity, private val imgUrlList: List<String>) :

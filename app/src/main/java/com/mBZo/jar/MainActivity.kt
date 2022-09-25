@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Base64
@@ -185,6 +186,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 //同步库存
                 if (loadInfo.text == getString(string.findNewArchive)){
                     syncArchive(this,getString(string.findNewArchive), drawable.ic_baseline_update_24)
+                }
+                else if (loadInfo.text == getString(string.findNewApp)){
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                        intent.data = Uri.parse(otaUrl)
+                        startActivity(intent,null)
+                    } catch (e: Exception) {
+                        Toast.makeText(this,"当前手机未安装浏览器",Toast.LENGTH_SHORT).show()
+                    }
                 }
                 else if (loadInfo.text == "已连接"){
                     MaterialAlertDialogBuilder(this)
@@ -381,6 +392,8 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     recyclerView.adapter = adapter
     btmNav.getOrCreateBadge(id.nav_search).number = count
     btmNav.getOrCreateBadge(id.nav_search).maxCharacterCount = 6
+    //动态读取nav高度，防止遮挡recycler
+    recyclerView.setPadding(0,0,0,btmNav.height)
 
     //设置searchBar
     searchBar.addTextChangedListener {

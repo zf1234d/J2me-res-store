@@ -10,8 +10,8 @@ android {
         applicationId "com.mBZo.jar"
         minSdk 16
         targetSdk 33
-        versionCode 56
-        versionName "3.0-beta1"
+        versionCode 57
+        versionName "3.0-beta2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -40,7 +40,12 @@ android {
     android.applicationVariants.all {
         variant ->
             variant.outputs.all {
-                outputFileName = "J2ME下载_${variant.versionName}_${variant.name}.apk"
+                if(variant.buildType.name == 'debug') {
+                    outputFileName = "app_${variant.versionName}_${variant.name}.apk"
+                }
+                else {
+                    outputFileName = "J2ME下载_${variant.versionName}_${variant.name}.apk"
+                }
             }
     }
 
@@ -62,5 +67,4 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
-
 
