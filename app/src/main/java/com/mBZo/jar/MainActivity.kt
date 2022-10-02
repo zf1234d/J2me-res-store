@@ -24,7 +24,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.mBZo.jar.R.*
 import okhttp3.*
 import java.io.File
@@ -171,10 +170,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
             }.start()
         }
-        Timer().schedule(120) {
-            //启动太卡，减速一下
-            updateConfig()
-        }
+        //启动太卡，减速一下
+        Thread.sleep(100)
+        updateConfig()
         //检查更新结束
     }
     //点击事件
@@ -184,24 +182,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
             id.btn1 -> {
                 val loadInfo: TextView = findViewById(id.state2)
                 //同步库存
-                if (loadInfo.text == getString(string.findNewArchive)){
-                    syncArchive(this,getString(string.findNewArchive), drawable.ic_baseline_update_24)
-                }
-                else if (loadInfo.text == getString(string.findNewApp)){
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                        intent.data = Uri.parse(otaUrl)
-                        startActivity(intent,null)
-                    } catch (e: Exception) {
-                        Toast.makeText(this,"当前手机未安装浏览器",Toast.LENGTH_SHORT).show()
+                when (loadInfo.text) {
+                    getString(string.findNewArchive) -> {
+                        syncArchive(this,getString(string.findNewArchive), drawable.ic_baseline_update_24)
                     }
-                }
-                else if (loadInfo.text == "已连接"){
-                    MaterialAlertDialogBuilder(this)
-                        .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端$cloudver)\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
-                        .setPositiveButton("更改库存"){_,_ -> syncArchive(this,"已连接", drawable.ic_baseline_check_24)}
-                        .show()
+                    getString(string.findNewApp) -> {
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                            intent.data = Uri.parse(otaUrl)
+                            startActivity(intent,null)
+                        } catch (e: Exception) {
+                            Toast.makeText(this,getString(string.notFindBrowser),Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    getString(string.allReady) -> {
+                        MaterialAlertDialogBuilder(this)
+                            .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端$cloudver)\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
+                            .setPositiveButton("更改库存"){_,_ -> syncArchive(this,getString(string.allReady), drawable.ic_baseline_check_24)}
+                            .show()
+                    }
                 }
             }
         }
@@ -359,12 +359,12 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val recyclerView: RecyclerView = activity.findViewById(id.recyclerView)
     val btmNav: BottomNavigationView = activity.findViewById(id.home_nav)
     var count = 0
-    loadInfo.text = "已连接"
+    loadInfo.text = activity.getString(string.allReady)
     Glide.with(activity).load(drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
     for (str in File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()){
-        if (str.substringAfter("\"name\"", "pass") != "pass"){
+        if (str.substringAfter("\"name\"") != str){
             name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
             count++//计数
             //这里加个容错，防止库存里有鸡汤
@@ -377,8 +377,8 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
             //之前基于androlua的版本其实就有这个功能，但lua的数组比较灵活，不需要像kotlin这样进行判断
             //TODO 会不会卡啊？之后加个开关吧
         }
-        else if (str.substringAfter("\"from\"", "pass") != "pass"){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
-        else if (str.substringAfter("\"url\"", "pass") != "pass"){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
+        else if (str.substringAfter("\"from\"") != str){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
+        else if (str.substringAfter("\"url\"") != str){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
 
     }
 
@@ -419,7 +419,7 @@ fun dcBase64(string: String): String {
 }
 
 //仓库的RecyclerView
-public class RecyclerAdapter(private val activity: AppCompatActivity,private val nameList: List<String>,private  val fromList: List<String>,private val pathList: List<String>) :
+class RecyclerAdapter(private val activity: AppCompatActivity,private val nameList: List<String>,private  val fromList: List<String>,private val pathList: List<String>) :
     RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,

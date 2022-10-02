@@ -47,8 +47,9 @@ class StoreActivity : AppCompatActivity() {
         copyFrom.text = copyFromText
         //通过from判断解析方法吧，找不到对应from就返回不支持
         if (from != null) {//虽然做了防毒，但不这样写不能编译
-            if (from.substringAfter("没空云", "pass") != "pass"){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
-            else if (from.substringAfter("Joyin的jar游戏下载站", "pass") != "pass"){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
+            if (from.substringAfter("没空云",) != from){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
+            else if (from.substringAfter("Joyin的jar游戏下载站",) != from){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
+            else if (from.substringAfter("52emu",) != from){ apiDecode52emu(this,path) }//匹配规则，52emu (专属混合规则)
             else if (from=="损坏") {//库存本身出意外都是在这里解决
                 MaterialAlertDialogBuilder(this)
                     .setCancelable(false)
@@ -155,7 +156,6 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 }
 
 //解析的前置模块
-var lanzouApiInfo:String = ""
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     //蓝奏云解析kotlin版 by.mBZo ver1.0
     Thread {
@@ -171,7 +171,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 //无密码
                 //获取信息
                 val info = finLink.split("<span class=\"p7\">")
-                lanzouApiInfo = "${info[1].split("<br>")[0]}\n${info[2].split("<br>")[0]}\n${info[3].split("<br>")[0]}\n${info[4].split("<br>")[0]}\n${info[5].split("<br>")[0]}".replace("</span>","",ignoreCase = true).replace("<font>","",ignoreCase = true).replace("</font>","",ignoreCase = true)
+                apiTemp1 = "${info[1].split("<br>")[0]}\n${info[2].split("<br>")[0]}\n${info[3].split("<br>")[0]}\n${info[4].split("<br>")[0]}\n${info[5].split("<br>")[0]}".replace("</span>","",ignoreCase = true).replace("<font>","",ignoreCase = true).replace("</font>","",ignoreCase = true)
                 //拼接二次请求连接
                 finLink = "https://wwr.lanzoux.com${finLink.split("</iframe>")[1].split("src=\"")[1].split("\"")[0]}"
                 //无密码状态二次请求
@@ -189,7 +189,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
             }
             else {
                 //有密码,拼接请求数据
-                lanzouApiInfo = finLink.split("<meta name=\"description\" content=\"")[1].split("|\"")[0]
+                apiTemp1 = finLink.split("<meta name=\"description\" content=\"")[1].split("|\"")[0]
                 finLink = "${finLink.split("data : \'")[1].split("\'+pwd,")[0]}$pwd"
             }
             //发起最终请求
@@ -204,20 +204,13 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
             activity.runOnUiThread{
                 if (type == "only"){
                     //作为唯一信息来源
-                    val linkNameList = listOf<String>(lanzouApiInfo)
+                    val linkNameList = listOf<String>(apiTemp1)
                     val linkList = listOf<String>(finLink)
-                    contentFormat(activity,null,null,linkList,linkNameList, lanzouApiInfo,true)
+                    contentFormat(activity,null,null,linkList,linkNameList,apiTemp1,true)
                 }
-                else if (type == "open"){
-                    //直接跳转浏览器
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                        intent.data = Uri.parse(finLink)
-                        startActivity(activity,intent,null)
-                    } catch (e: Exception) {
-                        Toast.makeText(activity,"当前手机未安装浏览器",Toast.LENGTH_SHORT).show()
-                    }
+                else if (type == "link"){
+                    //只要链接
+                    apiTemp1 = finLink
                 }
             }
         }catch (e: Exception) {
@@ -226,8 +219,52 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     }.start()
 }
 
+//公共变量
+var apiTemp1 = ""
 
 //各种解析
+private fun apiDecode52emu(activity: StoreActivity, path: String?) {
+    if (path !=null){
+        Thread {
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("http://java.52emu.cn/xq.php?id=$path")
+                    .build()
+                val response = client.newCall(request).execute()
+                var info = response.body.string()
+                val downLinkList = mutableListOf<String>()
+                val downLinkNameList = mutableListOf<String>()
+                val imagesList = mutableListOf<String>()
+                apiTemp1 = "" //清除公共变量内的旧内容
+                //解析下载地址
+                for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />").split("</a>|<a href=\'")){
+                    downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
+                    downLinkList.add("http://java.52emu.cn/"+index.substringBefore("\'>"))
+                }
+                //解析预览图
+                for (index in info.split("img")){
+                    if (index.substringAfter("src=\"")!=index){
+                        imagesList.add(index.substringAfter("src=\"").substringBefore("\">"))
+                    }
+                }
+                //解析简介
+                if (info.substringAfter("游戏简介")!=info){
+                    info = info.substringAfter("【游戏简介】").substringAfter("</h3>").substringBefore("<hr />")
+                }
+                else{
+                    info = "未找到简介"
+                }
+                activity.runOnUiThread {
+                    contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,info,true)
+                }
+            }catch (e: Exception) {
+                apiDecode52emu(activity,path)
+            }
+        }.start()
+    }
+}
+
 private fun apiDecodeJoyin(activity: StoreActivity, path: String?) {
     if (path != null) {
         lanzouApi(activity,"only",path,"1234")
