@@ -170,8 +170,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
             }.start()
         }
-        //启动太卡，减速一下
-        Thread.sleep(100)
+        //启动别太快，减速等布局
+        Thread.sleep(10)
         updateConfig()
         //检查更新结束
     }
