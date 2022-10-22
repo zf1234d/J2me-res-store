@@ -367,7 +367,7 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
         if (str.substringAfter("\"name\"") != str){
             name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
             count++//计数
-            //这里加个容错，防止库存里有鸡汤
+            //这里加个容错，防止库存里有只因汤
             if (name.size-from.size == 2){
                 from.add("损坏")
             }

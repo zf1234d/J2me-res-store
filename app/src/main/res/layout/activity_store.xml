@@ -79,11 +79,11 @@
                 <TextView
                     android:id="@+id/storeInfo"
                     android:visibility="gone"
-                    android:layout_marginBottom="24dp"
+                    android:textIsSelectable="true"
+                    android:layout_marginBottom="120dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/black1"/>
-
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 

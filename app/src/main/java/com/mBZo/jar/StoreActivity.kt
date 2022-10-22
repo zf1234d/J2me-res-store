@@ -75,6 +75,49 @@ class StoreActivity : AppCompatActivity() {
     }
 }
 
+
+//链接统一处理
+fun web2download(activity: AppCompatActivity,link: String){
+    if (link.substringAfter("52emu").substringBefore("xid=1") != link.substringAfter("52emu")){
+        //这是一个特殊情况，用于处理52emu中的高速下载，使其变得可用
+        Toast.makeText(activity,"检测到特殊链接，请等待重处理", Toast.LENGTH_SHORT).show()
+        Thread {
+            try {
+                val client = OkHttpClient.Builder()
+                    .followRedirects(false)
+                    .build()
+                val request = Request.Builder()
+                    .url(link)
+                    .build()
+                val response = client.newCall(request).execute()
+                var finLink = response.header("Location")
+                if (finLink != null) {
+                    finLink = "https://wwr.lanzoux.com/${finLink.substringAfter("https://pan.lanzou.com/tp/")}"
+                    lanzouApi(activity as StoreActivity,"web2download",finLink,"")
+                }
+                else{
+                    Toast.makeText(activity,"未能修复52emu的高速下载", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                web2download(activity,link)
+            }
+            //
+        }.start()
+        //没想到挺长的
+    }
+    else{
+        //这里是打开浏览器正常的下载
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            intent.data = Uri.parse(link)
+            startActivity(activity,intent,null)
+        } catch (e: Exception) {
+            Toast.makeText(activity,"当前手机未安装浏览器", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 //统一回调
 fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,fileSizeList: List<String>?,about: String?,loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
@@ -87,12 +130,6 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
         if (about != null){
             info.visibility = View.VISIBLE
             info.text = about
-            info.setOnClickListener{
-                MaterialAlertDialogBuilder(activity)
-                    .setTitle("简介")
-                    .setMessage(about)
-                    .show()
-            }
         }
         //图标
         if (iconLink != null){
@@ -113,17 +150,6 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
         //下载链接
         if (linkNameList != null) {
             if (linkList != null) {
-                //跳转浏览器
-                fun web2download(link: String){
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                        intent.data = Uri.parse(link)
-                        startActivity(activity,intent,null)
-                    } catch (e: Exception) {
-                        Toast.makeText(activity,"当前手机未安装浏览器", Toast.LENGTH_SHORT).show()
-                    }
-                }
                 //处理下载相关交互
                 downloadFab.visibility = View.VISIBLE
                 val linkNameListA = mutableListOf<String>()
@@ -144,14 +170,14 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                                     MaterialAlertDialogBuilder(activity)
                                         .setTitle("详情")
                                         .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
-                                        .setPositiveButton("立即下载"){_,_ -> web2download(linkList[p]) }
+                                        .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
                                         .show()
                                 }
                                 else {
                                     MaterialAlertDialogBuilder(activity)
                                         .setTitle("详情")
                                         .setMessage("\n${linkNameList[p]}")
-                                        .setPositiveButton("立即下载"){_,_ -> web2download(linkList[p]) }
+                                        .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
                                         .show()
                                 }
                             }
@@ -161,7 +187,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                         MaterialAlertDialogBuilder(activity)
                             .setTitle("详情")
                             .setMessage("\n${linkNameList[0]}")
-                            .setPositiveButton("立即下载"){_,_ -> web2download(linkList[0]) }
+                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[0]) }
                             .show()
                     }
                 }
@@ -174,7 +200,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 
 //解析的前置模块
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
-    //蓝奏云解析kotlin版 by.mBZo ver1.0
+    //蓝奏云解析kotlin版 by.mBZo ver1.1
     Thread {
         try {
             //第一次请求
@@ -225,9 +251,9 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                     val linkList = listOf<String>(finLink)
                     contentFormat(activity,null,null,linkList,linkNameList,null,apiTemp1,true)
                 }
-                else if (type == "link"){
-                    //只要链接
-                    apiTemp1 = finLink
+                else if (type == "web2download"){
+                    //传回web2download
+                    web2download(activity,finLink)
                 }
             }
         }catch (e: Exception) {
