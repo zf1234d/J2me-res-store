@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     val loadInfo: TextView = findViewById(id.state2)
                     val noticeCard: MaterialCardView = findViewById(id.state4)
                     val noticeInfo: TextView = findViewById(id.state5)
-                    if (versionCode > uc4.toInt()) {
+                    if (versionCode >= uc4.toInt()) {
                         if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
                             lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
                         }
