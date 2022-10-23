@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/toolbar_thanks"
+        android:icon="@mipmap/ic_launcher"
+        android:orderInCategory="0"
+        android:title="@string/thanks"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_privacy"
+        android:orderInCategory="1"
+        android:title="@string/privacy"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/toolbar_about"
+        android:orderInCategory="2"
+        android:title="@string/about"
+        app:showAsAction="never" />
+</menu>

@@ -1,10 +1,22 @@
 package com.mBZo.jar
 
+import android.os.Build
 import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textview.MaterialTextView
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.*
+import kotlin.concurrent.schedule
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -35,6 +47,96 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
+    }
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        //设置顶栏菜单
+        val toolbar: Toolbar = view.findViewById(R.id.toolbar)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            toolbar.inflateMenu(R.menu.home_toolbar_menu)
+            toolbar.setOnMenuItemClickListener {
+                when(it.itemId){
+                    //捐赠页
+                    R.id.toolbar_thanks -> {
+                        Thread{
+                            try {
+                                val client = OkHttpClient()
+                                val request = Request.Builder()
+                                    .url("$netWorkRoot/jarlist/thanks_donate.long")
+                                    .build()
+                                val response = client.newCall(request).execute()
+                                activity?.runOnUiThread {
+                                    MaterialAlertDialogBuilder(view.context)
+                                        .setTitle("感谢这些朋友的捐赠支持")
+                                        .setMessage(response.body.string())
+                                        .setPositiveButton("确认"){_,_ -> }
+                                        .show()
+                                }
+                            } catch (e: Exception) {
+                                //请求错误
+                                activity?.runOnUiThread {
+                                    MaterialAlertDialogBuilder(view.context)
+                                        .setTitle("错误")
+                                        .setMessage("网络连接失败")
+                                        .setPositiveButton("确认") { _, _ -> }
+                                        .show()
+                                }
+                            }
+                        }.start()
+                    }
+                    //隐私协议
+                    R.id.toolbar_privacy -> {
+                        Thread{
+                            try {
+                                val client = OkHttpClient()
+                                val request = Request.Builder()
+                                    .url("$netWorkRoot/jarlist/Privacypolicy.txt")
+                                    .build()
+                                val response = client.newCall(request).execute()
+                                activity?.runOnUiThread {
+                                    MaterialAlertDialogBuilder(view.context)
+                                        .setTitle("隐私协议")
+                                        .setMessage(response.body.string())
+                                        .setPositiveButton("确认"){_,_ -> }
+                                        .show()
+                                }
+                            } catch (e: Exception) {
+                                //请求错误
+                                activity?.runOnUiThread {
+                                    MaterialAlertDialogBuilder(view.context)
+                                        .setTitle("错误")
+                                        .setMessage("网络连接失败")
+                                        .setPositiveButton("确认") { _, _ -> }
+                                        .show()
+                                }
+                            }
+                        }.start()
+                    }
+                    //关于
+                    R.id.toolbar_about -> {
+                        val dialog = MaterialAlertDialogBuilder(view.context)
+                            .setView(R.layout.dialog_about)
+                            .show()
+                        val dialogAboutVersion: MaterialTextView? = dialog.findViewById(R.id.dialog_about_version)
+                        val dialogAboutAdd: MaterialTextView? = dialog.findViewById(R.id.dialog_about_add)
+                        val versionText = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                        val addText = "前往 <a href='https://github.com/zf1234d/J2me-res-store'>Github</a> 查看源代码<br>通过 <a href='https://support.qq.com/product/346579'>腾讯兔小巢</a> 反馈问题"
+
+                        dialogAboutVersion?.text = versionText
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            dialogAboutAdd?.text = Html.fromHtml(addText,Html.FROM_HTML_MODE_LEGACY)
+                        } else {
+                            dialogAboutAdd?.text = Html.fromHtml(addText)
+                        }
+                        dialogAboutAdd?.movementMethod = LinkMovementMethod.getInstance()
+                    }
+                    else -> Toast.makeText(view.context,"啥情况啊???", Toast.LENGTH_SHORT).show()
+                }
+                true
+            }
+        }
     }
 
     companion object {
