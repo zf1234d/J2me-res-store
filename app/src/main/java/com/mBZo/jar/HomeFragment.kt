@@ -8,15 +8,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
-import kotlin.concurrent.schedule
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -57,9 +55,11 @@ class HomeFragment : Fragment() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             toolbar.inflateMenu(R.menu.home_toolbar_menu)
             toolbar.setOnMenuItemClickListener {
+                val loading: ProgressBar? = activity?.findViewById(R.id.progressBar2)
                 when(it.itemId){
                     //捐赠页
                     R.id.toolbar_thanks -> {
+                        loading?.visibility = View.VISIBLE
                         Thread{
                             try {
                                 val client = OkHttpClient()
@@ -68,6 +68,7 @@ class HomeFragment : Fragment() {
                                     .build()
                                 val response = client.newCall(request).execute()
                                 activity?.runOnUiThread {
+                                    loading?.visibility = View.INVISIBLE
                                     MaterialAlertDialogBuilder(view.context)
                                         .setTitle("感谢这些朋友的捐赠支持")
                                         .setMessage(response.body.string())
@@ -77,34 +78,7 @@ class HomeFragment : Fragment() {
                             } catch (e: Exception) {
                                 //请求错误
                                 activity?.runOnUiThread {
-                                    MaterialAlertDialogBuilder(view.context)
-                                        .setTitle("错误")
-                                        .setMessage("网络连接失败")
-                                        .setPositiveButton("确认") { _, _ -> }
-                                        .show()
-                                }
-                            }
-                        }.start()
-                    }
-                    //隐私协议
-                    R.id.toolbar_privacy -> {
-                        Thread{
-                            try {
-                                val client = OkHttpClient()
-                                val request = Request.Builder()
-                                    .url("$netWorkRoot/jarlist/Privacypolicy.txt")
-                                    .build()
-                                val response = client.newCall(request).execute()
-                                activity?.runOnUiThread {
-                                    MaterialAlertDialogBuilder(view.context)
-                                        .setTitle("隐私协议")
-                                        .setMessage(response.body.string())
-                                        .setPositiveButton("确认"){_,_ -> }
-                                        .show()
-                                }
-                            } catch (e: Exception) {
-                                //请求错误
-                                activity?.runOnUiThread {
+                                    loading?.visibility = View.INVISIBLE
                                     MaterialAlertDialogBuilder(view.context)
                                         .setTitle("错误")
                                         .setMessage("网络连接失败")

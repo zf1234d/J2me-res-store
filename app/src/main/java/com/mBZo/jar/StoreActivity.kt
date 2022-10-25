@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -46,9 +47,9 @@ class StoreActivity : AppCompatActivity() {
         copyFrom.text = copyFromText
         //通过from判断解析方法吧，找不到对应from就返回不支持
         if (from != null) {//虽然做了防毒，但不这样写不能编译
-            if (from.substringAfter("没空云",) != from){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
-            else if (from.substringAfter("Joyin的jar游戏下载站",) != from){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
-            else if (from.substringAfter("52emu",) != from){ apiDecode52emu(this,path) }//匹配规则，52emu (专属混合规则)
+            if (from.contains("没空云")){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
+            else if (from.contains("Joyin的jar游戏下载站")){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
+            else if (from.contains("52emu")){ apiDecode52emu(this,path) }//匹配规则，52emu (专属混合规则)
             else if (from=="损坏") {//库存本身出意外都是在这里解决
                 MaterialAlertDialogBuilder(this)
                     .setCancelable(false)
@@ -78,9 +79,10 @@ class StoreActivity : AppCompatActivity() {
 
 //链接统一处理
 fun web2download(activity: AppCompatActivity,link: String){
-    if (link.substringAfter("52emu").substringBefore("xid=1") != link.substringAfter("52emu")){
+    if (link.contains("52emu") && link.contains("xid=1")){
         //这是一个特殊情况，用于处理52emu中的高速下载，使其变得可用
-        Toast.makeText(activity,"检测到特殊链接，请等待重处理", Toast.LENGTH_SHORT).show()
+        contentFormat(activity,null,null,null,null,null,null,true)
+        Snackbar.make(activity.findViewById(R.id.floatingActionButton),"检测到特殊链接，正在重处理",Snackbar.LENGTH_LONG).show()
         Thread {
             try {
                 val client = OkHttpClient.Builder()
@@ -194,7 +196,8 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
             }
         }
         //隐藏加载
-        if (loading){ loadingProgressBar.visibility = View.INVISIBLE }
+        if (loading){ loadingProgressBar.visibility = View.VISIBLE }
+        else { loadingProgressBar.visibility = View.INVISIBLE }
     }
 }
 
@@ -210,7 +213,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 .build()
             var response = client.newCall(request).execute()
             var finLink = response.body.string()
-            if(finLink.substringAfter("passwd")==finLink) {
+            if(finLink.contains("passwd").not()) {
                 //无密码
                 //获取信息
                 val info = finLink.split("<span class=\"p7\">")
@@ -247,12 +250,13 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
             activity.runOnUiThread{
                 if (type == "only"){
                     //作为唯一信息来源
-                    val linkNameList = listOf<String>(apiTemp1)
-                    val linkList = listOf<String>(finLink)
-                    contentFormat(activity,null,null,linkList,linkNameList,null,apiTemp1,true)
+                    val linkNameList = listOf(apiTemp1)
+                    val linkList = listOf(finLink)
+                    contentFormat(activity,null,null,linkList,linkNameList,null,apiTemp1,false)
                 }
                 else if (type == "web2download"){
                     //传回web2download
+                    contentFormat(activity,null,null,null,null,null,null,false)
                     web2download(activity,finLink)
                 }
             }
@@ -281,9 +285,15 @@ private fun apiDecode52emu(activity: StoreActivity, path: String?) {
                 val imagesList = mutableListOf<String>()
                 apiTemp1 = "" //清除公共变量内的旧内容
                 //解析下载地址
-                for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />").split("</a>|<a href=\'")){
-                    downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
-                    downLinkList.add("http://java.52emu.cn/"+index.substringBefore("\'>"))
+                if (info.contains("暂无下载地址")) {
+                    Snackbar.make(activity.findViewById(R.id.floatingActionButton),"暂无下载地址",Snackbar.LENGTH_LONG).show()
+                }
+                else {
+                    for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />")
+                        .split("</a>|<a href=\'")) {
+                        downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
+                        downLinkList.add("http://java.52emu.cn/" + index.substringBefore("\'>"))
+                    }
                 }
                 //解析预览图
                 for (index in info.split("img")){
@@ -292,14 +302,19 @@ private fun apiDecode52emu(activity: StoreActivity, path: String?) {
                     }
                 }
                 //解析简介
-                if (info.substringAfter("游戏简介")!=info){
+                if (info.contains("游戏简介")){
                     info = info.substringAfter("【游戏简介】").substringAfter("</h3>").substringBefore("<hr />")
                 }
                 else{
                     info = "未找到简介"
                 }
                 activity.runOnUiThread {
-                    contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,true)
+                    if (downLinkList.size == 0){
+                        contentFormat(activity,null,imagesList,null,null,null,info,false)
+                    }
+                    else{
+                        contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)
+                    }
                 }
             }catch (e: Exception) {
                 apiDecode52emu(activity,path)
@@ -336,17 +351,15 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
                     if (data.getJSONObject(index-1).getJSONObject("file").toString()!=""){//确认项目不是文件夹
                         if (name != null){
                             //下载列表
-                            if (temp.substringAfter(name)!=temp){//确认是可下载文件
+                            if (temp.contains(name)){//确认是可下载文件
                                 downLinkNameList.add(temp.substringAfter(name+"_"))
                                 downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
-                                fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024).toString()}kb")
+                                fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024)}kb")
                             }
                             //预览图
-                            if (temp.substringAfter("img")!=temp && temp.substringAfter("img")!="ErrLog.txt"){
-                                imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
-                            }
+                            if (temp.contains("img") && temp.contains("ErrLog.txt").not()){imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp") }
                             //图标
-                            if (temp.substringAfter("pic")!=temp && temp.substringAfter("pic")!="ErrLog.txt"){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,null,false)}
+                            if (temp.contains("pic") && temp.contains("ErrLog.txt").not()){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,null,true)}
                             //简介
                             if (temp=="gameInfo.html"){
                                 val requestInfo = Request.Builder()
@@ -354,14 +367,14 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
                                     .build()
                                 thread {
                                     val responseInfo = client.newCall(requestInfo).execute()
-                                    contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),true)
+                                    contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
                                 }
                             }
                             //一次判断结束
                         }
                     }
                 }//循环结束
-                contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,false)
+                contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
             } catch (e: Exception) {
                 apiDecodeBzyun(activity, path,name)
             }

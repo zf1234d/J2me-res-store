@@ -364,21 +364,20 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
     for (str in File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()){
-        if (str.substringAfter("\"name\"") != str){
+        if (str.contains("\"name\"")){
             name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
             count++//计数
             //这里加个容错，防止库存里有只因汤
+            //实现方式是计算数组长度，正常来说name长度应该是比from和path大1，所以如果大2就是有缺失
             if (name.size-from.size == 2){
                 from.add("损坏")
             }
             if (name.size-path.size == 2){
                 path.add("损坏")
             }
-            //之前基于androlua的版本其实就有这个功能，但lua的数组比较灵活，不需要像kotlin这样进行判断
-            //TODO 会不会卡啊？之后加个开关吧
         }
-        else if (str.substringAfter("\"from\"") != str){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
-        else if (str.substringAfter("\"url\"") != str){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
+        else if (str.contains("\"from\"")){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
+        else if (str.contains("\"url\"")){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
 
     }
 

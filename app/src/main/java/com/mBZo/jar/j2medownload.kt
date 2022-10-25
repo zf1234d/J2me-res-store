@@ -1,6 +1,5 @@
 package com.mBZo.jar
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
