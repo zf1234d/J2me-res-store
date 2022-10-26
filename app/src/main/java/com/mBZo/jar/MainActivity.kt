@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(layout.activity_main)
+        val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
         //布置viewpager2
         val mFragments = ArrayList<Fragment>()
         val viewpager: ViewPager2 = findViewById(id.home_page_tree)
@@ -64,12 +65,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
         mFragments.add(settingrootFragment())
-        viewpager.offscreenPageLimit = 3
+        viewpager.offscreenPageLimit = 1
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         //设置默认主页为第二个
-        nav.menu.getItem(1).isChecked = true
-        viewpager.currentItem = 1
+        val startPage = spfRecord.getString("startPage","home")
+        if (startPage=="home"){
+            viewpager.setCurrentItem(1, false)
+            nav.menu.getItem(1).isChecked = true
+        }
         //底栏按钮监听
         nav.setOnItemSelectedListener {
             when (it.itemId) {
@@ -95,12 +99,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
 
 
         //允许左右滑动嘛？
-        val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
         val usefulFun = spfRecord.getBoolean("viewpagerIsBad",false)
         if (usefulFun) {
             viewpager.isUserInputEnabled = false
         }
-
 
         //联网获取软件配置信息
         fun updateConfig() {
@@ -127,6 +129,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                             nowReadArchiveList(this)
                         }
                         else{
+                            if (startPage=="search"){
+                                viewpager.setCurrentItem(1, false)
+                                nav.menu.getItem(1).isChecked = true
+                            }
                             loadInfo.text = getString(string.findNewArchive)
                             Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
                             noticeInfo.text = uc1
@@ -138,6 +144,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                         }
                     }
                     else{
+                        if (startPage=="search"){
+                            viewpager.setCurrentItem(1, false)
+                            nav.menu.getItem(1).isChecked = true
+                        }
                         loadInfo.text = resources.getString(string.findNewApp)
                         Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
                         noticeInfo.text = uc1
@@ -170,8 +180,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
             }.start()
         }
-        //启动别太快，减速等布局
-        Thread.sleep(10)
         updateConfig()
         //检查更新结束
     }

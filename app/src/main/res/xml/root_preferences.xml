@@ -4,10 +4,19 @@
         app:iconSpaceReserved="false"
         app:title="界面">
         <SwitchPreferenceCompat
-            android:icon="@drawable/ic_baseline_block_24"
+            app:icon="@drawable/ic_baseline_block_24"
             app:key="viewpagerIsBad"
-            app:summary="下次启动软件生效"
+            app:summaryOff="左右滑动启用中"
+            app:summaryOn="左右滑动被禁用"
             app:title="禁用左右滑动" />
+        <ListPreference
+            app:icon="@drawable/ic_baseline_login_24"
+            app:defaultValue="home"
+            app:entries="@array/startPage_entries"
+            app:entryValues="@array/startPage_values"
+            app:key="startPage"
+            app:title="起始页"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
     <!--
         <PreferenceCategory app:title="@string/messages_header">
