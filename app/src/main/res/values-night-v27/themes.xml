@@ -13,7 +13,7 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/white2</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/black2</item>
+        <item name="android:navigationBarColor">@color/white3</item>
         <item name="android:windowLightNavigationBar">false</item>
         <!-- Customize your theme here. -->
     </style>
