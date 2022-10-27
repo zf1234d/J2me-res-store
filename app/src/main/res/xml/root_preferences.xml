@@ -18,6 +18,18 @@
             app:title="起始页"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="行为">
+        <SwitchPreferenceCompat
+            app:icon="@drawable/ic_baseline_exit_to_app_24"
+            app:key="keepActivity"
+            app:defaultValue="true"
+            app:summaryOff="退出杀死进程"
+            app:summaryOn="退出保留缓存"
+            app:title="缓存后台进程" />
+    </PreferenceCategory>
+
     <!--
         <PreferenceCategory app:title="@string/messages_header">
 

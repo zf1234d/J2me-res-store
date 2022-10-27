@@ -7,6 +7,8 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.util.Base64
 import android.view.*
 import android.widget.*
@@ -29,14 +31,12 @@ import okhttp3.*
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 
 
-
-val name = mutableListOf<String>()
-val from = mutableListOf<String>()
-val path = mutableListOf<String>()
+var name = mutableListOf<String>()
+var from = mutableListOf<String>()
+var path = mutableListOf<String>()
 var archiveNum=0
 var archiveB64C=""
 var archiveVer=""
@@ -114,18 +114,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     val loadInfo: TextView = findViewById(id.state2)
                     val noticeCard: MaterialCardView = findViewById(id.state4)
                     val noticeInfo: TextView = findViewById(id.state5)
+                    //不同情况共通加载内容
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"),Html.FROM_HTML_MODE_LEGACY)
+                    } else {
+                        noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"))
+                    }
+                    noticeInfo.movementMethod = LinkMovementMethod.getInstance()
+                    noticeCard.visibility = View.VISIBLE
+                    archiveNum = uc2.toInt()
+                    archiveB64C = data
+                    archiveVer = uc3
+                    cloudver = uc4.toInt()
+                    otaUrl = uc5
+                    //不同情况差异加载内容
                     if (versionCode >= uc4.toInt()) {
                         if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
                             lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
                         }
                         val localAuth = File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()
                         if (localAuth == uc3) {
-                            noticeInfo.text = uc1
-                            noticeCard.visibility = View.VISIBLE
-                            archiveNum = uc2.toInt()
-                            archiveB64C = data
-                            archiveVer = uc3
-                            cloudver = uc4.toInt()
                             nowReadArchiveList(this)
                         }
                         else{
@@ -135,12 +143,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                             }
                             loadInfo.text = getString(string.findNewArchive)
                             Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
-                            noticeInfo.text = uc1
-                            noticeCard.visibility = View.VISIBLE
                             loading.visibility = View.GONE
-                            archiveNum = uc2.toInt()
-                            archiveB64C = data
-                            archiveVer = uc3
                         }
                     }
                     else{
@@ -150,10 +153,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                         }
                         loadInfo.text = resources.getString(string.findNewApp)
                         Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
-                        noticeInfo.text = uc1
-                        noticeCard.visibility = View.VISIBLE
                         loading.visibility = View.GONE
-                        otaUrl = uc5
                     }
                 }
             }
@@ -213,6 +213,32 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 }
             }
         }
+    }
+    //按键事件
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            val searchBar: TextInputEditText? = findViewById(id.search_bar)
+            if (searchBar?.hasFocus() == true){
+                searchBar.clearFocus()
+                return false
+            }
+            else {
+                val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
+                val keepApp = spfRecord.getBoolean("keepActivity",true)
+                if (keepApp) {
+                    val intent = Intent(Intent.ACTION_MAIN)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    intent.addCategory(Intent.CATEGORY_HOME)
+                    startActivity(intent)
+                    return true
+                }
+                else {
+                    finish()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 }
 
@@ -367,6 +393,11 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val recyclerView: RecyclerView = activity.findViewById(id.recyclerView)
     val btmNav: BottomNavigationView = activity.findViewById(id.home_nav)
     var count = 0
+    //清空list中遗留的数据
+    name = mutableListOf()
+    from = mutableListOf()
+    path = mutableListOf()
+    //改变界面
     loadInfo.text = activity.getString(string.allReady)
     Glide.with(activity).load(drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE

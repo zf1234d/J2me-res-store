@@ -204,6 +204,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 //解析的前置模块
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     //蓝奏云解析kotlin版 by.mBZo ver1.1
+    var errorReporter = 0
     Thread {
         try {
             //第一次请求
@@ -228,8 +229,8 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 //拼接最终请求数据
                 finLink = response.body.string()
                 val data1 = finLink.split("var ajaxdata = '")[1].split("';")[0]
-                val data2 = finLink.split("var vsign = '")[1].split("';")[0]
-                val data3 = finLink.split("var awebsigna = '")[1].split("';")[0]
+                val data2 = finLink.split("var msigns = '")[1].split("';")[0]
+                val data3 = finLink.split("var wsigns = '")[1].split("';")[0]
                 val data4 = finLink.split("var cwebsignkeyc = '")[1].split("';")[0]
                 finLink = "action=downprocess&signs=$data1&sign=$data2&websign=$data3&websignkey=$data4&ves=1"
             }
@@ -261,7 +262,18 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 }
             }
         }catch (e: Exception) {
-            lanzouApi(activity,type,url,pwd)
+            errorReporter++
+            if (errorReporter > 10){
+                activity.runOnUiThread {
+                    MaterialAlertDialogBuilder(activity)
+                        .setTitle("错误")
+                        .setMessage("经多次尝试无法加载所需信息。\n若您的网络未断开，则蓝奏云的api发生变动，请等待更新，谢谢。")
+                        .show()
+                }
+            }
+            else{
+                lanzouApi(activity,type,url,pwd)
+            }
         }
     }.start()
 }

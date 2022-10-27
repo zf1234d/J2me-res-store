@@ -96,8 +96,7 @@ class HomeFragment : Fragment() {
                         val dialogAboutVersion: MaterialTextView? = dialog.findViewById(R.id.dialog_about_version)
                         val dialogAboutAdd: MaterialTextView? = dialog.findViewById(R.id.dialog_about_add)
                         val versionText = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-                        val addText = "前往 <a href='https://github.com/zf1234d/J2me-res-store'>Github</a> 查看源代码<br>通过 <a href='https://support.qq.com/product/346579'>腾讯兔小巢</a> 反馈问题"
-
+                        val addText = "前往 <a href='https://github.com/zf1234d/J2me-res-store'>Github</a> 查看源代码<br>通过 <a href='https://support.qq.com/product/346579'>腾讯兔小巢</a> 反馈问题<br><br><a href='https://www.coolapk.com/u/2436868'>酷安@没空的人Zero</a><br><a href='https://space.bilibili.com/57862935'>哔哩哔哩@没空的人</a>"
                         dialogAboutVersion?.text = versionText
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             dialogAboutAdd?.text = Html.fromHtml(addText,Html.FROM_HTML_MODE_LEGACY)
