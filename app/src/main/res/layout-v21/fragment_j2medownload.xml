@@ -61,7 +61,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="获取服务……"
-                            android:textColor="@color/white2"
+                            android:textColor="#FAFAFA"
                             android:textSize="16sp" />
 
                         <TextView
@@ -70,7 +70,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:text="version"
-                            android:textColor="@color/white2"
+                            android:textColor="#FAFAFA"
                             android:textSize="14sp" />
 
                     </LinearLayout>

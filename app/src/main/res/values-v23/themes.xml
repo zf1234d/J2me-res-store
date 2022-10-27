@@ -8,12 +8,12 @@
         <item name="colorOnPrimary">@color/white1</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/black1</item>
-        <item name="colorSecondaryVariant">@color/white3</item>
-        <item name="colorOnSecondary">@color/black1</item>
+        <item name="colorSecondaryVariant">@color/black2</item>
+        <item name="colorOnSecondary">@color/white3</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@color/white2</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">?attr/colorSecondaryVariant</item>
+        <item name="android:navigationBarColor">@color/black2</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:fitsSystemWindows">true</item>
         <!-- Customize your theme here. -->
