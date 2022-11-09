@@ -11,6 +11,7 @@ import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.util.Base64
 import android.view.*
+import android.webkit.URLUtil
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
@@ -61,11 +62,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         val viewpager: ViewPager2 = findViewById(id.home_page_tree)
         val nav: BottomNavigationView = findViewById(id.home_nav)
         val loading: ProgressBar = findViewById(id.progressBar2)
-        val versionCode: Int = BuildConfig.VERSION_CODE
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
         mFragments.add(settingrootFragment())
-        viewpager.offscreenPageLimit = 1
+        viewpager.offscreenPageLimit = 2
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         //设置默认主页为第二个
@@ -115,20 +115,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     val noticeCard: MaterialCardView = findViewById(id.state4)
                     val noticeInfo: TextView = findViewById(id.state5)
                     //不同情况共通加载内容
+                    noticeCard.visibility = View.VISIBLE
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"),Html.FROM_HTML_MODE_LEGACY)
                     } else {
                         noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"))
                     }
                     noticeInfo.movementMethod = LinkMovementMethod.getInstance()
-                    noticeCard.visibility = View.VISIBLE
                     archiveNum = uc2.toInt()
                     archiveB64C = data
                     archiveVer = uc3
                     cloudver = uc4.toInt()
                     otaUrl = uc5
                     //不同情况差异加载内容
-                    if (versionCode >= uc4.toInt()) {
+                    if (BuildConfig.VERSION_CODE >= uc4.toInt()) {
                         if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
                             lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
                         }

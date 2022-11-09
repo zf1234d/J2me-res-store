@@ -1,13 +1,22 @@
 package com.mBZo.jar
 
+import android.app.DownloadManager
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -24,6 +33,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.net.URLDecoder
 import kotlin.concurrent.thread
 
 class StoreActivity : AppCompatActivity() {
@@ -98,7 +108,7 @@ fun web2download(activity: AppCompatActivity,link: String){
                     lanzouApi(activity as StoreActivity,"web2download",finLink,"")
                 }
                 else{
-                    Toast.makeText(activity,"未能修复52emu的高速下载", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(activity.findViewById(R.id.floatingActionButton),"未能修复52emu的高速下载",Snackbar.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 web2download(activity,link)
@@ -108,14 +118,74 @@ fun web2download(activity: AppCompatActivity,link: String){
         //没想到挺长的
     }
     else{
-        //这里是打开浏览器正常的下载
-        try {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.addCategory(Intent.CATEGORY_BROWSABLE)
-            intent.data = Uri.parse(link)
-            startActivity(activity,intent,null)
-        } catch (e: Exception) {
-            Toast.makeText(activity,"当前手机未安装浏览器", Toast.LENGTH_SHORT).show()
+        //这里是正常的下载，获取相关参数，决定是否需要内置下载器
+        fun otherOpen(url:String) {
+            //跳转浏览器
+            try {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(url)
+                startActivity(activity,intent,null)
+            } catch (e: Exception) {
+                Toast.makeText(activity,"未找到可用软件", Toast.LENGTH_SHORT).show()
+            }
+        }
+        //下载判断开始，用户是否使用内置下载
+        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
+        val downloader = spfRecord.getBoolean("smartDownloader",false)
+
+        if (downloader){
+            //内置下载处理函数
+            fun downloadFileBy(url:String,filename:String,size:Long,mimeType:String){
+                if (filename.subSequence(filename.length-4,filename.length)==".jar"){
+                    MaterialAlertDialogBuilder(activity)
+                        .setMessage("$filename\n\n大小：${size/1024} kb")
+                        .setPositiveButton("开始下载"){_,_->
+                            val uri: Uri = Uri.parse(url)
+                            val request: DownloadManager.Request = DownloadManager.Request(uri)
+                            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
+                            request.setDescription("正在下载...")
+                            request.setTitle("J2ME应用商店:$filename")
+                            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                            request.setMimeType(mimeType)
+                            val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                            //val downloadId = downloadManager.enqueue(request)
+                            downloadManager.enqueue(request)
+                        }
+                        .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(url) }
+                        .show()
+                }
+                else{
+                    MaterialAlertDialogBuilder(activity)
+                        .setMessage("$filename\n\n大小：${size / 1024} kb\n\n（内置下载器不允许下载此格式文件）")
+                        .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(url) }
+                        .show()
+                }
+                contentFormat(activity,null,null,null,null,null,null,false)
+            }
+            //显示加载进度条
+            Snackbar.make(activity.findViewById(R.id.floatingActionButton),"正在判断文件类型",Snackbar.LENGTH_LONG).show()
+            contentFormat(activity,null,null,null,null,null,null,true)
+            //可能使用内置下载，判断链接符不符合内置下载文件要求
+            val webview = activity.findViewById<WebView>(R.id.storeBrowser)
+            webview.loadUrl(link)
+            webview.webViewClient=WebViewClient()
+            webview.setDownloadListener { url, _, contentDisposition, mimetype, contentLength ->
+                //加载完成
+                contentFormat(activity,null,null,null,null,null,null,false)
+                //传参，然后去下载
+                if (contentDisposition==""){
+                    val filename = URLUtil.guessFileName(url,null,null)
+                    downloadFileBy(url,filename,contentLength,mimetype)
+                }
+                else{
+                    val filename = URLDecoder.decode(Regex("\"$").replace(contentDisposition.substringAfter(Regex("filename\\s*=\\s*\"?").find(contentDisposition)!!.value),""),"utf-8")
+                    downloadFileBy(url,filename,contentLength,mimetype)
+                }
+            }
+        }
+        else{
+            //用户关闭内置下载需求
+            otherOpen(link)
         }
     }
 }
@@ -128,10 +198,16 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
         val loadingProgressBar = activity.findViewById<ProgressBar>(R.id.storeLoadingMain)
         val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
         val downloadFab: FloatingActionButton = activity.findViewById(R.id.floatingActionButton)
+        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
+        val downloader = spfRecord.getBoolean("smartDownloader",false)
         //简介
         if (about != null){
             info.visibility = View.VISIBLE
-            info.text = about
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                info.text = Html.fromHtml(about.replace("\n","<br>"), Html.FROM_HTML_MODE_LEGACY)
+            } else {
+                info.text = Html.fromHtml(about.replace("\n","<br>"))
+            }
         }
         //图标
         if (iconLink != null){
@@ -168,19 +244,25 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                         MaterialAlertDialogBuilder(activity)
                             .setTitle("下载列表")
                             .setItems(linkNameListA.toTypedArray()){_,p ->
-                                if (fileSizeList != null){
-                                    MaterialAlertDialogBuilder(activity)
-                                        .setTitle("详情")
-                                        .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
-                                        .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
-                                        .show()
+                                //加一道判断是否启用内置下载
+                                if (downloader){
+                                    web2download(activity,linkList[p])
                                 }
-                                else {
-                                    MaterialAlertDialogBuilder(activity)
-                                        .setTitle("详情")
-                                        .setMessage("\n${linkNameList[p]}")
-                                        .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
-                                        .show()
+                                else{
+                                    if (fileSizeList != null){
+                                        MaterialAlertDialogBuilder(activity)
+                                            .setTitle("详情")
+                                            .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
+                                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
+                                            .show()
+                                    }
+                                    else {
+                                        MaterialAlertDialogBuilder(activity)
+                                            .setTitle("详情")
+                                            .setMessage("\n${linkNameList[p]}")
+                                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
+                                            .show()
+                                    }
                                 }
                             }
                             .show()

@@ -22,6 +22,11 @@
         app:iconSpaceReserved="false"
         app:title="行为">
         <SwitchPreferenceCompat
+            app:key="smartDownloader"
+            app:defaultValue="false"
+            app:summary="接管jar文件的下载过程(实验性功能)"
+            app:title="内置下载器" />
+        <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_exit_to_app_24"
             app:key="keepActivity"
             app:defaultValue="true"
