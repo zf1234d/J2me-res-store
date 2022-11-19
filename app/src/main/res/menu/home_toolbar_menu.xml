@@ -8,6 +8,11 @@
         android:title="@string/thanks"
         app:showAsAction="never" />
     <item
+        android:id="@+id/toolbar_updateLog"
+        android:orderInCategory="1"
+        android:title="@string/updateLogs"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/toolbar_about"
         android:orderInCategory="2"
         android:title="@string/about"

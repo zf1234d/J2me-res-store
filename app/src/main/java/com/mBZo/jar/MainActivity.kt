@@ -1,5 +1,7 @@
 package com.mBZo.jar
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -11,7 +13,6 @@ import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.util.Base64
 import android.view.*
-import android.webkit.URLUtil
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
@@ -20,6 +21,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.multidex.MultiDex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.vectordrawable.graphics.drawable.ArgbEvaluator
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
@@ -392,6 +394,7 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val searchBar: TextInputEditText = activity.findViewById(id.search_bar)
     val recyclerView: RecyclerView = activity.findViewById(id.recyclerView)
     val btmNav: BottomNavigationView = activity.findViewById(id.home_nav)
+    val btn1: MaterialCardView = activity.findViewById(id.btn1)
     var count = 0
     //清空list中遗留的数据
     name = mutableListOf()

@@ -13,5 +13,6 @@
     <string name="download">下载</string>
     <string name="notFindBrowser">当前手机未安装浏览器</string>
     <string name="thanks">支持和鼓励</string>
+    <string name="updateLogs">更新日志</string>
     <string name="about">关于</string>
 </resources>

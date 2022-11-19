@@ -144,12 +144,11 @@ fun web2download(activity: AppCompatActivity,link: String){
                             val request: DownloadManager.Request = DownloadManager.Request(uri)
                             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
                             request.setDescription("正在下载...")
-                            request.setTitle("J2ME应用商店:$filename")
+                            request.setTitle(filename)
                             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                             request.setMimeType(mimeType)
                             val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                            //val downloadId = downloadManager.enqueue(request)
-                            downloadManager.enqueue(request)
+                            val downloadId = downloadManager.enqueue(request)
                         }
                         .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(url) }
                         .show()
@@ -163,7 +162,6 @@ fun web2download(activity: AppCompatActivity,link: String){
                 contentFormat(activity,null,null,null,null,null,null,false)
             }
             //显示加载进度条
-            Snackbar.make(activity.findViewById(R.id.floatingActionButton),"正在判断文件类型",Snackbar.LENGTH_LONG).show()
             contentFormat(activity,null,null,null,null,null,null,true)
             //可能使用内置下载，判断链接符不符合内置下载文件要求
             val webview = activity.findViewById<WebView>(R.id.storeBrowser)
@@ -244,7 +242,6 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                         MaterialAlertDialogBuilder(activity)
                             .setTitle("下载列表")
                             .setItems(linkNameListA.toTypedArray()){_,p ->
-                                //加一道判断是否启用内置下载
                                 if (downloader){
                                     web2download(activity,linkList[p])
                                 }
@@ -268,11 +265,16 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                             .show()
                     }
                     else {
-                        MaterialAlertDialogBuilder(activity)
-                            .setTitle("详情")
-                            .setMessage("\n${linkNameList[0]}")
-                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[0]) }
-                            .show()
+                        if (downloader){
+                            web2download(activity,linkList[0])
+                        }
+                        else{
+                            MaterialAlertDialogBuilder(activity)
+                                .setTitle("详情")
+                                .setMessage("\n${linkNameList[0]}")
+                                .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[0]) }
+                                .show()
+                        }
                     }
                 }
             }
@@ -286,7 +288,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 //解析的前置模块
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     //蓝奏云解析kotlin版 by.mBZo ver1.1
-    var errorReporter = 0
+    var finLink="";var data1="";var data2="";var data3="";var data4=""//预生成变量用来方便错误调试
     Thread {
         try {
             //第一次请求
@@ -295,7 +297,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 .url(url)
                 .build()
             var response = client.newCall(request).execute()
-            var finLink = response.body.string()
+            finLink = response.body.string()
             if(finLink.contains("passwd").not()) {
                 //无密码
                 //获取信息
@@ -310,10 +312,10 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 response = client.newCall(request).execute()
                 //拼接最终请求数据
                 finLink = response.body.string()
-                val data1 = finLink.split("var ajaxdata = '")[1].split("';")[0]
-                val data2 = finLink.split("var msigns = '")[1].split("';")[0]
-                val data3 = finLink.split("var wsigns = '")[1].split("';")[0]
-                val data4 = finLink.split("var cwebsignkeyc = '")[1].split("';")[0]
+                data1 = finLink.substringAfter("var ajaxdata = '").substringBefore("';")//signs
+                data2 = finLink.substringAfter("var s_sign = '").substringBefore("';")//sign
+                data3 = finLink.substringAfter("var ws_sign = '").substringBefore("';")//websign
+                data4 = finLink.substringAfter("var wsk_sign = '").substringBefore("';")//websignkey
                 finLink = "action=downprocess&signs=$data1&sign=$data2&websign=$data3&websignkey=$data4&ves=1"
             }
             else {
@@ -344,17 +346,25 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 }
             }
         }catch (e: Exception) {
-            errorReporter++
-            if (errorReporter > 10){
-                activity.runOnUiThread {
-                    MaterialAlertDialogBuilder(activity)
-                        .setTitle("错误")
-                        .setMessage("经多次尝试无法加载所需信息。\n若您的网络未断开，则蓝奏云的api发生变动，请等待更新，谢谢。")
-                        .show()
-                }
-            }
-            else{
-                lanzouApi(activity,type,url,pwd)
+            activity.runOnUiThread {
+                MaterialAlertDialogBuilder(activity)
+                    .setCancelable(false)
+                    .setTitle("加载失败")
+                    .setMessage("您的网络可能存在问题！\n若多次重试均无效则不排除蓝奏云api变动的可能性。")
+                    .setPositiveButton("重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                    .setNeutralButton("显示日志") {_,_ ->
+                        MaterialAlertDialogBuilder(activity)
+                            .setCancelable(false)
+                            .setTitle("失败详情")
+                            .setMessage("finLink:\n$finLink\n" +
+                                    "data1:$data1\n" +
+                                    "data2:$data2\n" +
+                                    "data3:$data3\n" +
+                                    "data4:$data4")
+                            .setPositiveButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                            .show()
+                    }
+                    .show()
             }
         }
     }.start()

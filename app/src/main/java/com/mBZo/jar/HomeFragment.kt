@@ -59,6 +59,11 @@ class HomeFragment : Fragment() {
                 when(it.itemId){
                     //捐赠页
                     R.id.toolbar_thanks -> {
+                        val toolbarDialog = MaterialAlertDialogBuilder(view.context)
+                            .setTitle("支持和鼓励")
+                            .setMessage("正在获取……")
+                            .setPositiveButton("确认"){_,_ -> }
+                            .show()
                         loading?.visibility = View.VISIBLE
                         Thread{
                             try {
@@ -69,21 +74,61 @@ class HomeFragment : Fragment() {
                                 val response = client.newCall(request).execute()
                                 activity?.runOnUiThread {
                                     loading?.visibility = View.INVISIBLE
-                                    MaterialAlertDialogBuilder(view.context)
-                                        .setTitle("感谢这些朋友的捐赠支持")
-                                        .setMessage(response.body.string())
-                                        .setPositiveButton("确认"){_,_ -> }
-                                        .show()
+                                    toolbarDialog.setTitle("感谢这些朋友的捐赠支持")
+                                    toolbarDialog.setMessage(response.body.string())
                                 }
                             } catch (e: Exception) {
                                 //请求错误
                                 activity?.runOnUiThread {
                                     loading?.visibility = View.INVISIBLE
-                                    MaterialAlertDialogBuilder(view.context)
-                                        .setTitle("错误")
-                                        .setMessage("网络连接失败")
-                                        .setPositiveButton("确认") { _, _ -> }
-                                        .show()
+                                    toolbarDialog.setTitle("错误")
+                                    toolbarDialog.setMessage("网络连接失败")
+                                }
+                            }
+                        }.start()
+                    }
+                    //更新日志
+                    R.id.toolbar_updateLog -> {
+                        loading?.visibility = View.VISIBLE
+                        val toolbarDialog = MaterialAlertDialogBuilder(view.context)
+                            .setTitle("更新日志")
+                            .setMessage("正在获取……")
+                            .setPositiveButton("确认"){_,_ -> }
+                            .show()
+                        Thread{
+                            try {
+                                val client = OkHttpClient()
+                                val request = Request.Builder()
+                                    .url("$netWorkRoot/jarlist/update.log")
+                                    .build()
+                                val response = client.newCall(request).execute()
+                                val updateLogRaw = response.body.string()
+                                var updateLogDecode = ""
+                                activity?.runOnUiThread {
+                                    loading?.visibility = View.INVISIBLE
+                                    for (index in updateLogRaw.substringAfter("更新日志").split("\n")) {
+                                        if (index.contains(Regex("^### "))) {
+                                            updateLogDecode += "<h3>${index.substringAfter("###")}</h3>"
+                                            continue
+                                        }
+                                        if (index.contains(Regex("^\\* "))) {
+                                            updateLogDecode += "<li>${index.substringAfter("*")}</li>"
+                                            continue
+                                        }
+                                    }
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        toolbarDialog.setMessage(Html.fromHtml(updateLogDecode,Html.FROM_HTML_MODE_LEGACY))
+                                    }
+                                    else{
+                                        toolbarDialog.setMessage(Html.fromHtml(updateLogDecode))
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                //请求错误
+                                activity?.runOnUiThread {
+                                    loading?.visibility = View.INVISIBLE
+                                    toolbarDialog.setTitle("错误")
+                                    toolbarDialog.setMessage("网络连接失败")
                                 }
                             }
                         }.start()

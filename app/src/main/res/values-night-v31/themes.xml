@@ -17,7 +17,8 @@
         <item name="android:windowLightNavigationBar">false</item>
         <!-- android 12 splashscreen. -->
         <item name="android:windowSplashScreenBackground">#61B6DA</item>
-        <item name="android:windowSplashScreenAnimationDuration">10</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenAnimationDuration">1</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>
