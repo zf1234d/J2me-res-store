@@ -75,7 +75,11 @@ class HomeFragment : Fragment() {
                                 activity?.runOnUiThread {
                                     loading?.visibility = View.INVISIBLE
                                     toolbarDialog.setTitle("感谢这些朋友的捐赠支持")
-                                    toolbarDialog.setMessage(response.body.string())
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                        toolbarDialog.setMessage(Html.fromHtml(response.body.string().replace("\n","<br>"),Html.FROM_HTML_MODE_LEGACY))
+                                    } else {
+                                        toolbarDialog.setMessage(Html.fromHtml(response.body.string().replace("\n","<br>")))
+                                    }
                                 }
                             } catch (e: Exception) {
                                 //请求错误

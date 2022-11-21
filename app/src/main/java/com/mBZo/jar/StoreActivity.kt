@@ -87,6 +87,16 @@ class StoreActivity : AppCompatActivity() {
 }
 
 
+//跳转浏览器
+fun otherOpen(activity: AppCompatActivity,url:String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        startActivity(activity,intent,null)
+    } catch (e: Exception) {
+        Toast.makeText(activity,"未找到可用软件", Toast.LENGTH_SHORT).show()
+    }
+}
 //链接统一处理
 fun web2download(activity: AppCompatActivity,link: String){
     if (link.contains("52emu") && link.contains("xid=1")){
@@ -119,20 +129,10 @@ fun web2download(activity: AppCompatActivity,link: String){
     }
     else{
         //这里是正常的下载，获取相关参数，决定是否需要内置下载器
-        fun otherOpen(url:String) {
-            //跳转浏览器
-            try {
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse(url)
-                startActivity(activity,intent,null)
-            } catch (e: Exception) {
-                Toast.makeText(activity,"未找到可用软件", Toast.LENGTH_SHORT).show()
-            }
-        }
-        //下载判断开始，用户是否使用内置下载
         val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
         val downloader = spfRecord.getBoolean("smartDownloader",false)
 
+        //下载判断开始，用户是否使用内置下载
         if (downloader){
             //内置下载处理函数
             fun downloadFileBy(url:String,filename:String,size:Long,mimeType:String){
@@ -150,13 +150,13 @@ fun web2download(activity: AppCompatActivity,link: String){
                             val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                             val downloadId = downloadManager.enqueue(request)
                         }
-                        .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(url) }
+                        .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(activity,url) }
                         .show()
                 }
                 else{
                     MaterialAlertDialogBuilder(activity)
                         .setMessage("$filename\n\n大小：${size / 1024} kb\n\n（内置下载器不允许下载此格式文件）")
-                        .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(url) }
+                        .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(activity, url) }
                         .show()
                 }
                 contentFormat(activity,null,null,null,null,null,null,false)
@@ -183,7 +183,7 @@ fun web2download(activity: AppCompatActivity,link: String){
         }
         else{
             //用户关闭内置下载需求
-            otherOpen(link)
+            otherOpen(activity,link)
         }
     }
 }
@@ -287,8 +287,8 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
 
 //解析的前置模块
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
-    //蓝奏云解析kotlin版 by.mBZo ver1.1
-    var finLink="";var data1="";var data2="";var data3="";var data4=""//预生成变量用来方便错误调试
+    //蓝奏云解析kotlin版 by.mBZo ver1.2
+    var finLink="";var data="";var about: String
     Thread {
         try {
             //第一次请求
@@ -302,7 +302,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 //无密码
                 //获取信息
                 val info = finLink.split("<span class=\"p7\">")
-                apiTemp1 = "${info[1].split("<br>")[0]}\n${info[2].split("<br>")[0]}\n${info[3].split("<br>")[0]}\n${info[4].split("<br>")[0]}\n${info[5].split("<br>")[0]}".replace("</span>","",ignoreCase = true).replace("<font>","",ignoreCase = true).replace("</font>","",ignoreCase = true)
+                about = "${info[1].split("<br>")[0]}\n${info[2].split("<br>")[0]}\n${info[3].split("<br>")[0]}\n${info[4].split("<br>")[0]}\n${info[5].split("<br>")[0]}".replace("</span>","",ignoreCase = true).replace("<font>","",ignoreCase = true).replace("</font>","",ignoreCase = true)
                 //拼接二次请求连接
                 finLink = "https://wwr.lanzoux.com${finLink.split("</iframe>")[1].split("src=\"")[1].split("\"")[0]}"
                 //无密码状态二次请求
@@ -311,16 +311,28 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                     .build()
                 response = client.newCall(request).execute()
                 //拼接最终请求数据
-                finLink = response.body.string()
-                data1 = finLink.substringAfter("var ajaxdata = '").substringBefore("';")//signs
-                data2 = finLink.substringAfter("var s_sign = '").substringBefore("';")//sign
-                data3 = finLink.substringAfter("var ws_sign = '").substringBefore("';")//websign
-                data4 = finLink.substringAfter("var wsk_sign = '").substringBefore("';")//websignkey
-                finLink = "action=downprocess&signs=$data1&sign=$data2&websign=$data3&websignkey=$data4&ves=1"
+                val lanzouRaw = Regex("//.*\n").replace(response.body.string(),"")
+                data = finLink.substringAfter("data : { ").substringBefore(" },")
+                finLink=""
+                for (index in data.split(",")){
+                    finLink+="${index.substringAfter("\'").substringBefore("\':")}=" +
+                            if (index.contains("\':\'")) {
+                                index.substringAfter(":\'").substringBefore("\'")
+                            }
+                            else {
+                                if (Regex("^[0-9]*\$").matches(index.substringAfter("\':"))) {
+                                    index.substringAfter("\':")
+                                }
+                                else {
+                                    lanzouRaw.substringAfter("var ${index.substringAfter("\':")} = '").substringBefore("';")
+                                }
+                            } + "&"
+                }
+                finLink = finLink.substringBeforeLast("&")
             }
             else {
                 //有密码,拼接请求数据
-                apiTemp1 = finLink.split("<meta name=\"description\" content=\"")[1].split("|\"")[0]
+                about = "${finLink.split("<meta name=\"description\" content=\"")[1].split("|\"")[0]}\n上传时间：${finLink.substringAfter("\"n_file_infos\">").substringBefore("</span>")}"
                 finLink = "${finLink.split("data : \'")[1].split("\'+pwd,")[0]}$pwd"
             }
             //发起最终请求
@@ -335,9 +347,9 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
             activity.runOnUiThread{
                 if (type == "only"){
                     //作为唯一信息来源
-                    val linkNameList = listOf(apiTemp1)
+                    val linkNameList = listOf(about)
                     val linkList = listOf(finLink)
-                    contentFormat(activity,null,null,linkList,linkNameList,null,apiTemp1,false)
+                    contentFormat(activity,null,null,linkList,linkNameList,null,about,false)
                 }
                 else if (type == "web2download"){
                     //传回web2download
@@ -351,17 +363,17 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                     .setCancelable(false)
                     .setTitle("加载失败")
                     .setMessage("您的网络可能存在问题！\n若多次重试均无效则不排除蓝奏云api变动的可能性。")
-                    .setPositiveButton("重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                    .setNegativeButton("重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                    .setPositiveButton("退出") {_,_ -> activity.finish()}
                     .setNeutralButton("显示日志") {_,_ ->
                         MaterialAlertDialogBuilder(activity)
                             .setCancelable(false)
                             .setTitle("失败详情")
-                            .setMessage("finLink:\n$finLink\n" +
-                                    "data1:$data1\n" +
-                                    "data2:$data2\n" +
-                                    "data3:$data3\n" +
-                                    "data4:$data4")
-                            .setPositiveButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                            .setMessage("auto:\n$data\n" +
+                                    "finLink:\n$finLink")
+                            .setNegativeButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                            .setPositiveButton("退出") {_,_ -> activity.finish()}
+                            .setNeutralButton("原始网页") {_,_ -> otherOpen(activity,url) ;activity.finish()}
                             .show()
                     }
                     .show()
@@ -370,8 +382,6 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     }.start()
 }
 
-//公共变量
-var apiTemp1 = ""
 
 //各种解析
 private fun apiDecode52emu(activity: StoreActivity, path: String?) {
@@ -387,7 +397,6 @@ private fun apiDecode52emu(activity: StoreActivity, path: String?) {
                 val downLinkList = mutableListOf<String>()
                 val downLinkNameList = mutableListOf<String>()
                 val imagesList = mutableListOf<String>()
-                apiTemp1 = "" //清除公共变量内的旧内容
                 //解析下载地址
                 if (info.contains("暂无下载地址")) {
                     Snackbar.make(activity.findViewById(R.id.floatingActionButton),"暂无下载地址",Snackbar.LENGTH_LONG).show()
@@ -421,7 +430,12 @@ private fun apiDecode52emu(activity: StoreActivity, path: String?) {
                     }
                 }
             }catch (e: Exception) {
-                apiDecode52emu(activity,path)
+                MaterialAlertDialogBuilder(activity)
+                    .setCancelable(false)
+                    .setTitle("加载失败")
+                    .setMessage("您的网络可能存在问题！")
+                    .setPositiveButton("重试") {_,_ -> apiDecode52emu(activity,path) }
+                    .show()
             }
         }.start()
     }
@@ -480,7 +494,12 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?)
                 }//循环结束
                 contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
             } catch (e: Exception) {
-                apiDecodeBzyun(activity, path,name)
+                MaterialAlertDialogBuilder(activity)
+                    .setCancelable(false)
+                    .setTitle("加载失败")
+                    .setMessage("您的网络可能存在问题！")
+                    .setPositiveButton("重试") {_,_ -> apiDecodeBzyun(activity, path,name) }
+                    .show()
             }
         }.start()
     }

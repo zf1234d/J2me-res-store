@@ -1,7 +1,5 @@
 package com.mBZo.jar
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -21,7 +19,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.multidex.MultiDex
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.vectordrawable.graphics.drawable.ArgbEvaluator
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
@@ -34,17 +31,19 @@ import okhttp3.*
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
 
 
 var name = mutableListOf<String>()
 var from = mutableListOf<String>()
 var path = mutableListOf<String>()
-var archiveNum=0
-var archiveB64C=""
-var archiveVer=""
-var otaUrl=""
-var cloudver=0
+var onlineInfo = ""
+var archiveNum=0//本地的库存数
+val archiveB64C= { onlineInfo.substringAfter("{裁剪线}") }//库存列表
+val otaUrl={ onlineInfo.substringAfter("更新地址★").substringBefore("☆更新地址") }
+val archiveVer={ onlineInfo.substringAfter("有效日期★").substringBefore("☆有效日期") }//云端库存版本
+val cloudVer={ onlineInfo.substringAfter("云端版号★").substringBefore("☆云端版号").toInt() }//云端软件版本
 const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b822b9563/_apis/git/repositories/589e5978-bff8-4f4d-a328-c045f4237299/items?path="
 
 
@@ -108,7 +107,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
 
         //联网获取软件配置信息
         fun updateConfig() {
-            fun updateConfigSave(uc1: String, uc2: String, uc3: String, uc4: String, uc5: String, data: String) {
+            fun updateConfigSave(uc1: String, uc2: String) {
                 runOnUiThread {
                     val btn1: MaterialCardView = findViewById(id.btn1)
                     btn1.setOnClickListener(this)
@@ -125,25 +124,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     }
                     noticeInfo.movementMethod = LinkMovementMethod.getInstance()
                     archiveNum = uc2.toInt()
-                    archiveB64C = data
-                    archiveVer = uc3
-                    cloudver = uc4.toInt()
-                    otaUrl = uc5
                     //不同情况差异加载内容
-                    if (BuildConfig.VERSION_CODE >= uc4.toInt()) {
+                    if (BuildConfig.VERSION_CODE >= cloudVer.invoke()) {
                         if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
                             lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
                         }
                         val localAuth = File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()
-                        if (localAuth == uc3) {
+                        if (localAuth == archiveVer.invoke()) {
                             nowReadArchiveList(this)
                         }
                         else{
-                            if (startPage=="search"){
+                            if (startPage=="search") {
                                 viewpager.setCurrentItem(1, false)
                                 nav.menu.getItem(1).isChecked = true
                             }
-                            loadInfo.text = getString(string.findNewArchive)
+                            if (localAuth == "process") {
+                                loadInfo.text = getString(string.findNewArchiveUnexpectedStop)
+                            }
+                            else {
+                                loadInfo.text = getString(string.findNewArchive)
+                            }
                             Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
                             loading.visibility = View.GONE
                         }
@@ -166,17 +166,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                         .url("$netWorkRoot/jarlist/ready.set")
                         .build()
                     val response = client.newCall(request).execute()
-                    var data = response.body.string()
+                    val data = response.body.string()
+                    onlineInfo = data
                     val uc1 = data.substringAfter("公告板★\r\n").substringBefore("\r\n☆公告板")
                     val uc2 = data.substringAfter("热更新★").substringBefore("☆热更新")
-                    val uc3 = data.substringAfter("有效日期★").substringBefore("☆有效日期")
-                    val uc4 = data.substringAfter("云端版号★").substringBefore("☆云端版号")
-                    val uc5 = data.substringAfter("更新地址★").substringBefore("☆更新地址")
-                    data = data.substringAfter("{裁剪线}")//data转换
-                    updateConfigSave(uc1,uc2,uc3,uc4,uc5,data)
+                    updateConfigSave(uc1,uc2)
                 } catch (e: Exception) {
-                    //失败自动重试
-                    Timer().schedule(500) {
+                    //出错自动重试
+                    Timer().schedule(5) {
                         updateConfig()
                     }
                 }
@@ -193,14 +190,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                 val loadInfo: TextView = findViewById(id.state2)
                 //同步库存
                 when (loadInfo.text) {
-                    getString(string.findNewArchive) -> {
+                    getString(string.findNewArchive),getString(string.findNewArchiveUnexpectedStop) -> {
                         syncArchive(this,getString(string.findNewArchive), drawable.ic_baseline_update_24)
                     }
                     getString(string.findNewApp) -> {
                         try {
                             val intent = Intent(Intent.ACTION_VIEW)
                             intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                            intent.data = Uri.parse(otaUrl)
+                            intent.data = Uri.parse(otaUrl.invoke())
                             startActivity(intent,null)
                         } catch (e: Exception) {
                             Toast.makeText(this,getString(string.notFindBrowser),Toast.LENGTH_SHORT).show()
@@ -208,10 +205,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     }
                     getString(string.allReady) -> {
                         MaterialAlertDialogBuilder(this)
-                            .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端$cloudver)\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\ntargetSdk\n${this.applicationInfo.targetSdkVersion}")
+                            .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端${cloudVer.invoke()})\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\n目标\n${this.applicationInfo.targetSdkVersion}")
                             .setPositiveButton("更改库存"){_,_ -> syncArchive(this,getString(string.allReady), drawable.ic_baseline_check_24)}
                             .show()
                     }
+                    else -> { }
                 }
             }
         }
@@ -268,44 +266,47 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
     val loadInfo: TextView = activity.findViewById(id.state2)
     val loading: ProgressBar = activity.findViewById(id.progressBar2)
     var tip: String
+    var process = 0
+    var client: OkHttpClient
+    var request: Request
+    var response: Response
     loadInfo.text = activity.getString(string.updateNewArchive)
     Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
     loading.visibility = View.VISIBLE
     //批量下载一串路径
     fun processDownloadArchive(urlPath: Array<String>) {
-        var process = 0
-        fun getOkHttp2File(url: String){
-            fun saveGetAsFile(data: String) {
-                activity.runOnUiThread {
+        Thread {
+            fun getArchive(url: String){
+                try {
+                    client = OkHttpClient.Builder()
+                    .connectTimeout(2,TimeUnit.SECONDS)
+                    .readTimeout(3,TimeUnit.SECONDS)
+                    .build()
+                    request = Request.Builder()
+                    .url(url)
+                    .build()
+                    response = client.newCall(request).execute()
+                    val data = response.body.string()
                     File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText("\n${dcBase64(data)}", Charset.forName("UTF-8"))
                     process += 1
-                    //时间可能很长啊，记录个进度，没毛病啊
-                    tip = "${activity.getString(string.updateNewArchive)}($process/${urlPath.size})"
-                    loadInfo.text = tip
-                    //下载完成事件
-                    if (process == urlPath.size){
-                        lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list", archiveVer)
-                        nowReadArchiveList(activity)
+                        //时间可能很长啊，记录个进度，没毛病啊
+                    activity.runOnUiThread {
+                        tip = "${activity.getString(string.updateNewArchive)}($process/${urlPath.size})"
+                        loadInfo.text = tip
+                        //下载完成事件
+                        if (process == urlPath.size){
+                            lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list", archiveVer.invoke())
+                            nowReadArchiveList(activity)
+                        }
                     }
+                } catch (e: Exception) {
+                    getArchive(url)
                 }
             }
-            Thread {
-                try {
-                    val client = OkHttpClient()
-                    val request = Request.Builder()
-                        .url(url)
-                        .build()
-                    val response = client.newCall(request).execute()
-                    val data = response.body.string()
-                    saveGetAsFile(data)
-                } catch (e: Exception) {
-                    getOkHttp2File(url)
-                }
-            }.start()
-        }
-        for (str in urlPath){
-            getOkHttp2File(str)
-        }
+            for (str in urlPath){
+                getArchive(str)
+            }
+        }.start()
     }
     //下载仓库  参数为（路径，数量，是否下载）
     fun startDownloadArchive(list1: Array<String?>, list2: Array<Int?>, list4: Array<Boolean?>) {
@@ -320,10 +321,12 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
         }
         var urlPath = arrayOf<String>()
         //拼接默认仓库
+        var localArchiveB64C = archiveB64C.invoke()
         for (index in 1..archiveNum){
-            urlPath=append(urlPath,dcBase64(archiveB64C.substringAfter("{").substringBefore("}")))
-            archiveB64C = archiveB64C.substringAfter("}")
+            urlPath=append(urlPath,dcBase64(localArchiveB64C.substringAfter("{").substringBefore("}")))
+            localArchiveB64C = localArchiveB64C.substringAfter("}")
         }
+
         //拼接额外资源
         for (index in 1..list2.size){
             if (list4[index-1] == true){
@@ -360,6 +363,7 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
                 .setTitle("额外库存源(可以不选)")
                 .setMultiChoiceItems(list3,null){_,index,state ->  list4[index] = state}
                 .setPositiveButton("开始同步"){ _,_ ->
+                    lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list","process")
                     lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
                     startDownloadArchive(list1,list2,list4)
                 }
@@ -369,15 +373,15 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
     //网络线程
     Thread {
         try {
-            val client = OkHttpClient()
-            val request = Request.Builder()
+            client = OkHttpClient()
+            request = Request.Builder()
                 .url("$netWorkRoot/jarlist/expandlist/set.hanpi")
                 .build()
-            val response = client.newCall(request).execute()
+            response = client.newCall(request).execute()
             val data = response.body.string()
             askAnoArchSelect(data)
         } catch (e: Exception) {
-            e.printStackTrace()
+            syncArchive(activity,type, typeImg)
         }
     }.start()
 }
@@ -394,7 +398,6 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     val searchBar: TextInputEditText = activity.findViewById(id.search_bar)
     val recyclerView: RecyclerView = activity.findViewById(id.recyclerView)
     val btmNav: BottomNavigationView = activity.findViewById(id.home_nav)
-    val btn1: MaterialCardView = activity.findViewById(id.btn1)
     var count = 0
     //清空list中遗留的数据
     name = mutableListOf()
