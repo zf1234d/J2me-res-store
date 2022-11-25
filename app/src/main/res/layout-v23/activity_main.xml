@@ -14,7 +14,6 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:fitsSystemWindows="false"
         android:indeterminate="true"
-        android:indeterminateTint="@color/black3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -23,11 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/white3"
         android:fitsSystemWindows="false"
-        app:itemIconTint="@color/nav_color"
-        app:itemRippleColor="@color/black3"
-        app:itemTextColor="@color/nav_color"
         app:labelVisibilityMode="selected"
         app:menu="@menu/home_nav_menu">
 

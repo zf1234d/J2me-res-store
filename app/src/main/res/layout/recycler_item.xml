@@ -15,7 +15,6 @@
         android:id="@+id/archiveItemName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/black1"
         android:textSize="17sp"
         android:padding="1dp" />
 
@@ -23,7 +22,6 @@
         android:id="@+id/archiveItemFrom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/black2"
         android:textSize="12sp"
         android:padding="2dp"
         app:textAllCaps="false" />

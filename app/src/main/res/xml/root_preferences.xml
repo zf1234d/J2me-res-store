@@ -22,9 +22,10 @@
         app:iconSpaceReserved="false"
         app:title="行为">
         <SwitchPreferenceCompat
+            app:icon="@drawable/ic_baseline_get_app_24"
             app:key="smartDownloader"
             app:defaultValue="false"
-            app:summary="接管jar文件的下载过程(实验性功能)"
+            app:summary="实验性功能:使用内置下载器下载jar文件并自动打开"
             app:title="内置下载器" />
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_exit_to_app_24"

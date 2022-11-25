@@ -1,10 +1,9 @@
 package com.mBZo.jar
 
+import android.app.Dialog
 import android.app.DownloadManager
-import android.content.Context
+import android.content.*
 import android.content.Context.MODE_PRIVATE
-import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +32,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.io.File
 import java.net.URLDecoder
 import kotlin.concurrent.thread
 
@@ -47,16 +47,12 @@ class StoreActivity : AppCompatActivity() {
         val name = intent.getStringExtra("name")
         val from = intent.getStringExtra("from")
         val path = intent.getStringExtra("path")
-        //设置导航栏颜色
-        if (Build.VERSION.SDK_INT > 27){
-            window.navigationBarColor = getColor(R.color.white2)
-        }
         //不知道干嘛
         title.text = name
         val copyFromText = "来源:$from"
         copyFrom.text = copyFromText
         //通过from判断解析方法吧，找不到对应from就返回不支持
-        if (from != null) {//虽然做了防毒，但不这样写不能编译
+        if (name != null && from != null && path != null) {//虽然做了防毒，但不这样写不能编译
             if (from.contains("没空云")){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
             else if (from.contains("Joyin的jar游戏下载站")){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
             else if (from.contains("52emu")){ apiDecode52emu(this,path) }//匹配规则，52emu (专属混合规则)
@@ -140,6 +136,10 @@ fun web2download(activity: AppCompatActivity,link: String){
                     MaterialAlertDialogBuilder(activity)
                         .setMessage("$filename\n\n大小：${size/1024} kb")
                         .setPositiveButton("开始下载"){_,_->
+                            val waitingDownloadDialog =MaterialAlertDialogBuilder(activity)
+                                .setMessage("$filename\n\n大小：${size/1024} kb\n\n已经开始下载")
+                                .setCancelable(false)
+                                .show()
                             val uri: Uri = Uri.parse(url)
                             val request: DownloadManager.Request = DownloadManager.Request(uri)
                             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
@@ -149,6 +149,38 @@ fun web2download(activity: AppCompatActivity,link: String){
                             request.setMimeType(mimeType)
                             val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                             val downloadId = downloadManager.enqueue(request)
+                            val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+                            val receiver: BroadcastReceiver = object : BroadcastReceiver(){
+                                override fun onReceive(context: Context?, intent: Intent?) {
+                                    val myDownloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                                    if (downloadId == myDownloadId) {
+                                        val downloadFileUri = downloadManager.getUriForDownloadedFile(downloadId)
+                                        if (downloadFileUri != null) {
+                                            //下载完成，询问打开文件
+                                            waitingDownloadDialog.dismiss()
+                                            val installDialog = MaterialAlertDialogBuilder(activity)
+                                                .setMessage("$filename\n\n大小：${size/1024} kb\n\n下载完成")
+                                                .setNeutralButton("忽略") {_,_ ->}
+                                                .setPositiveButton("打开") {_,_ ->}
+                                                .setCancelable(false)
+                                                .show()
+                                            installDialog.getButton(Dialog.BUTTON_POSITIVE).setOnClickListener {
+                                                val jarFile = File(downloadFileUri.toString())
+                                                val mIntent = Intent(Intent.ACTION_VIEW)
+                                                mIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                                    mIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                    mIntent.setDataAndType(downloadFileUri,"application/java-archive")
+                                                } else {
+                                                    mIntent.setDataAndType(Uri.fromFile(jarFile),"application/java-archive")
+                                                }
+                                                activity.startActivity(mIntent)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            activity.registerReceiver(receiver, filter)
                         }
                         .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(activity,url) }
                         .show()
@@ -312,6 +344,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 response = client.newCall(request).execute()
                 //拼接最终请求数据
                 val lanzouRaw = Regex("//.*\n").replace(response.body.string(),"")
+                finLink = lanzouRaw
                 data = finLink.substringAfter("data : { ").substringBefore(" },")
                 finLink=""
                 for (index in data.split(",")){
@@ -369,7 +402,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                         MaterialAlertDialogBuilder(activity)
                             .setCancelable(false)
                             .setTitle("失败详情")
-                            .setMessage("auto:\n$data\n" +
+                            .setMessage("auto:$data\n" +
                                     "finLink:\n$finLink")
                             .setNegativeButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
                             .setPositiveButton("退出") {_,_ -> activity.finish()}
@@ -384,125 +417,123 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
 
 
 //各种解析
-private fun apiDecode52emu(activity: StoreActivity, path: String?) {
-    if (path !=null){
-        Thread {
-            try {
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url("http://java.52emu.cn/xq.php?id=$path")
-                    .build()
-                val response = client.newCall(request).execute()
-                var info = response.body.string()
-                val downLinkList = mutableListOf<String>()
-                val downLinkNameList = mutableListOf<String>()
-                val imagesList = mutableListOf<String>()
-                //解析下载地址
-                if (info.contains("暂无下载地址")) {
-                    Snackbar.make(activity.findViewById(R.id.floatingActionButton),"暂无下载地址",Snackbar.LENGTH_LONG).show()
+private fun apiDecode52emu(activity: StoreActivity, path: String) {
+    Thread {
+        try {
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url("http://java.52emu.cn/xq.php?id=$path")
+                .build()
+            val response = client.newCall(request).execute()
+            var info = response.body.string()
+            val downLinkList = mutableListOf<String>()
+            val downLinkNameList = mutableListOf<String>()
+            val imagesList = mutableListOf<String>()
+            //解析下载地址
+            if (info.contains("暂无下载地址")) {
+                Snackbar.make(activity.findViewById(R.id.floatingActionButton),"暂无下载地址",Snackbar.LENGTH_LONG).show()
+            }
+            else {
+                for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />")
+                    .split("</a>|<a href=\'")) {
+                    downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
+                    downLinkList.add("http://java.52emu.cn/" + index.substringBefore("\'>"))
                 }
-                else {
-                    for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />")
-                        .split("</a>|<a href=\'")) {
-                        downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
-                        downLinkList.add("http://java.52emu.cn/" + index.substringBefore("\'>"))
-                    }
+            }
+            //解析预览图
+            for (index in info.split("img")){
+                if (index.substringAfter("src=\"")!=index){
+                    imagesList.add(index.substringAfter("src=\"").substringBefore("\">"))
                 }
-                //解析预览图
-                for (index in info.split("img")){
-                    if (index.substringAfter("src=\"")!=index){
-                        imagesList.add(index.substringAfter("src=\"").substringBefore("\">"))
-                    }
-                }
-                //解析简介
-                if (info.contains("游戏简介")){
-                    info = info.substringAfter("【游戏简介】").substringAfter("</h3>").substringBefore("<hr />")
+            }
+            //解析简介
+            if (info.contains("游戏简介")){
+                info = info.substringAfter("【游戏简介】").substringAfter("</h3>").substringBefore("<hr />")
+            }
+            else{
+                info = "未找到简介"
+            }
+            activity.runOnUiThread {
+                if (downLinkList.size == 0){
+                    contentFormat(activity,null,imagesList,null,null,null,info,false)
                 }
                 else{
-                    info = "未找到简介"
+                    contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)
                 }
-                activity.runOnUiThread {
-                    if (downLinkList.size == 0){
-                        contentFormat(activity,null,imagesList,null,null,null,info,false)
-                    }
-                    else{
-                        contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)
-                    }
-                }
-            }catch (e: Exception) {
+            }
+        }catch (e: Exception) {
+            activity.runOnUiThread {
                 MaterialAlertDialogBuilder(activity)
                     .setCancelable(false)
                     .setTitle("加载失败")
                     .setMessage("您的网络可能存在问题！")
-                    .setPositiveButton("重试") {_,_ -> apiDecode52emu(activity,path) }
+                    .setNegativeButton("重试"){_,_ -> apiDecode52emu(activity,path) }
+                    .setPositiveButton("退出"){_,_ -> activity.finish() }
                     .show()
             }
-        }.start()
-    }
+        }
+    }.start()
 }
 
-private fun apiDecodeJoyin(activity: StoreActivity, path: String?) {
-    if (path != null) {
-        lanzouApi(activity,"only",path,"1234")
-    }
+private fun apiDecodeJoyin(activity: StoreActivity, path: String) {
+    lanzouApi(activity,"only",path,"1234")
 }
 
-private fun apiDecodeBzyun(activity: StoreActivity, path: String?,name: String?) {
-    if (path != null){
-        val addPath = "https://od.bzyun.top/api/?path=/J2ME应用商店$path/$name"
-        Thread {
-            try {
-                val client = OkHttpClient()
-                val request = Request.Builder()
-                    .url(addPath)
-                    .build()
-                val response = client.newCall(request).execute()
-                //解析
-                val data = JSONObject(response.body.string()).getJSONObject("folder").getJSONArray("value")
-                val downLinkList = mutableListOf<String>()
-                val downLinkNameList = mutableListOf<String>()
-                val fileSizeList = mutableListOf<String>()
-                val imagesList = mutableListOf<String>()
-                var temp:String
-                for (index in 1..data.length()){
-                    temp=data.getJSONObject(index-1).getString("name").toString()
-                    if (data.getJSONObject(index-1).getJSONObject("file").toString()!=""){//确认项目不是文件夹
-                        if (name != null){
-                            //下载列表
-                            if (temp.contains(name)){//确认是可下载文件
-                                downLinkNameList.add(temp.substringAfter(name+"_"))
-                                downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
-                                fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024)}kb")
-                            }
-                            //预览图
-                            if (temp.contains("img") && temp.contains("ErrLog.txt").not()){imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp") }
-                            //图标
-                            if (temp.contains("pic") && temp.contains("ErrLog.txt").not()){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,null,true)}
-                            //简介
-                            if (temp=="gameInfo.html"){
-                                val requestInfo = Request.Builder()
-                                    .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
-                                    .build()
-                                thread {
-                                    val responseInfo = client.newCall(requestInfo).execute()
-                                    contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
-                                }
-                            }
-                            //一次判断结束
+private fun apiDecodeBzyun(activity: StoreActivity, path: String,name: String) {
+    val addPath = "https://od.bzyun.top/api/?path=/J2ME应用商店$path/$name"
+    Thread {
+        try {
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url(addPath)
+                .build()
+            val response = client.newCall(request).execute()
+            //解析
+            val data = JSONObject(response.body.string()).getJSONObject("folder").getJSONArray("value")
+            val downLinkList = mutableListOf<String>()
+            val downLinkNameList = mutableListOf<String>()
+            val fileSizeList = mutableListOf<String>()
+            val imagesList = mutableListOf<String>()
+            var temp:String
+            for (index in 1..data.length()){
+                temp=data.getJSONObject(index-1).getString("name").toString()
+                if (data.getJSONObject(index-1).getJSONObject("file").toString()!=""){//确认项目不是文件夹
+                    //下载列表
+                    if (temp.contains(name)){//确认是可下载文件
+                        downLinkNameList.add(temp.substringAfter(name+"_"))
+                        downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
+                        fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024)}kb")
+                    }
+                    //预览图
+                    if (temp.contains("img") && temp.contains("ErrLog.txt").not()){imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp") }
+                    //图标
+                    if (temp.contains("pic") && temp.contains("ErrLog.txt").not()){contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,null,true)}
+                    //简介
+                    if (temp=="gameInfo.html"){
+                        val requestInfo = Request.Builder()
+                            .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
+                            .build()
+                        thread {
+                            val responseInfo = client.newCall(requestInfo).execute()
+                            contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
                         }
                     }
-                }//循环结束
-                contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
-            } catch (e: Exception) {
+                    //一次判断结束
+                }
+            }//循环结束
+            contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
+        } catch (e: Exception) {
+            activity.runOnUiThread {
                 MaterialAlertDialogBuilder(activity)
                     .setCancelable(false)
                     .setTitle("加载失败")
                     .setMessage("您的网络可能存在问题！")
-                    .setPositiveButton("重试") {_,_ -> apiDecodeBzyun(activity, path,name) }
+                    .setNegativeButton("重试"){_,_ -> apiDecodeBzyun(activity, path,name) }
+                    .setPositiveButton("退出"){_,_ -> activity.finish() }
                     .show()
             }
-        }.start()
-    }
+        }
+    }.start()
 }
 //***解析部分到此为止***
 

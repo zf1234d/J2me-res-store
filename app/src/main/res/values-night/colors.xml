@@ -1,10 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black1">#FFCCCCCC</color>
-    <color name="black2">#FF777777</color>
-    <color name="black3">#FF555555</color>
-    <color name="black4">#FF3C5874</color>
-    <color name="white1">#FF000000</color>
-    <color name="white2">#FF2A2A2A</color>
-    <color name="white3">#FF3A3A3A</color>
+    <color name="navigationBarColor">#242A30</color>
 </resources>

@@ -7,7 +7,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white2"
         android:orientation="vertical">
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -23,7 +22,6 @@
         <ProgressBar
             android:id="@+id/storeLoadingMain"
             style="?android:attr/progressBarStyleHorizontal"
-            android:indeterminateTint="@color/black3"
             android:indeterminate="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -63,14 +61,12 @@
                             android:id="@+id/storeTitle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/black1"
                             android:layout_marginBottom="16dp"
                             android:textSize="18sp"/>
                         <TextView
                             android:id="@+id/storeFrom"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/black2"
                             android:textSize="16sp"/>
                     </LinearLayout>
                 </LinearLayout>
@@ -88,8 +84,7 @@
                     android:textIsSelectable="true"
                     android:layout_marginBottom="120dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/black1"/>
+                    android:layout_height="wrap_content"/>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
@@ -106,7 +101,5 @@
         android:clickable="true"
         android:contentDescription="@string/download"
         android:focusable="true"
-        app:backgroundTint="@color/black4"
-        app:rippleColor="@color/black2"
         app:srcCompat="@drawable/ic_baseline_cloud_download_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

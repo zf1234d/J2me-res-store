@@ -69,6 +69,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         viewpager.offscreenPageLimit = 2
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
+        //设置导航栏颜色
+        if (Build.VERSION.SDK_INT > 27){
+            window.navigationBarColor = getColor(color.navigationBarColor)
+        }
         //设置默认主页为第二个
         val startPage = spfRecord.getString("startPage","home")
         if (startPage=="home"){

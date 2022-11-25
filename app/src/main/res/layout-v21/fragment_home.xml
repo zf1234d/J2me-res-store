@@ -14,13 +14,12 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="192dp"
-            android:background="?attr/colorPrimaryVariant"
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:contentScrim="?attr/colorPrimaryVariant"
+                app:titleCollapseMode="scale"
                 app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
                 app:title="J2ME应用商店">
                 <androidx.appcompat.widget.Toolbar
@@ -34,7 +33,6 @@
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/j2medownload_container"
             android:name="com.mBZo.jar.j2medownload"
-            android:background="@color/white2"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
