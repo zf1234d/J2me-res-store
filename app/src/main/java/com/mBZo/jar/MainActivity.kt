@@ -12,6 +12,7 @@ import android.text.method.LinkMovementMethod
 import android.util.Base64
 import android.view.*
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -69,8 +70,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         viewpager.offscreenPageLimit = 2
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
-        //设置导航栏颜色
-        if (Build.VERSION.SDK_INT > 27){
+        if (Build.VERSION.SDK_INT >=27){//设置导航栏颜色
             window.navigationBarColor = getColor(color.navigationBarColor)
         }
         //设置默认主页为第二个

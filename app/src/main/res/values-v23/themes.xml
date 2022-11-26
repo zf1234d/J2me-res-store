@@ -31,8 +31,8 @@
         <item name="colorPrimaryInverse">@color/md_theme_light_inversePrimary</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?android:colorBackground</item>
-        <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">?android:colorBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:fitsSystemWindows">true</item>
         <!-- Customize your theme here. -->
