@@ -196,11 +196,16 @@ fun web2download(activity: AppCompatActivity,link: String){
             //显示加载进度条
             contentFormat(activity,null,null,null,null,null,null,true)
             //可能使用内置下载，判断链接符不符合内置下载文件要求
-            val webview = activity.findViewById<WebView>(R.id.storeBrowser)
-            webview.loadUrl(link)
-            webview.webViewClient=WebViewClient()
-            webview.setDownloadListener { url, _, contentDisposition, mimetype, contentLength ->
-                //加载完成
+            val webviewDialog = MaterialAlertDialogBuilder(activity)
+                .setTitle("正在验证")
+                .setView(R.layout.dialog_webview)
+                .show()
+            val webview: WebView? = webviewDialog.findViewById(R.id.webview)
+            webview?.loadUrl(link)
+            webview?.webViewClient=WebViewClient()
+            webview?.setDownloadListener { url, _, contentDisposition, mimetype, contentLength ->
+                //成功获得下载链接,关闭webview窗口并隐藏加载进度条
+                webviewDialog.dismiss()
                 contentFormat(activity,null,null,null,null,null,null,false)
                 //传参，然后去下载
                 if (contentDisposition==""){

@@ -12,7 +12,6 @@ import android.text.method.LinkMovementMethod
 import android.util.Base64
 import android.view.*
 import android.widget.*
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -46,7 +45,6 @@ val otaUrl={ onlineInfo.substringAfter("更新地址★").substringBefore("☆�
 val archiveVer={ onlineInfo.substringAfter("有效日期★").substringBefore("☆有效日期") }//云端库存版本
 val cloudVer={ onlineInfo.substringAfter("云端版号★").substringBefore("☆云端版号").toInt() }//云端软件版本
 const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b822b9563/_apis/git/repositories/589e5978-bff8-4f4d-a328-c045f4237299/items?path="
-
 
 
 
