@@ -20,18 +20,24 @@
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                app:contentScrim="?android:attr/colorBackground"
                 app:titleCollapseMode="scale"
                 app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
-                app:title="设置"
-                app:toolbarId="@+id/toolbar">
+                app:title="设置">
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="?attr/actionBarSize" />
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"/>
+
+
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
-
+        <WebView
+            android:id="@+id/statisticalWebview"
+            android:layout_width="0dp"
+            android:layout_height="0dp" />
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/setting_container"
             android:name="com.mBZo.jar.SettingsFragment"

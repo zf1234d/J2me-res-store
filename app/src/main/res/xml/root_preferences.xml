@@ -20,13 +20,23 @@
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"
-        app:title="行为">
+        app:title="下载">
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_get_app_24"
             app:key="smartDownloader"
             app:defaultValue="false"
-            app:summary="实验性功能:使用内置下载器下载jar文件并自动打开"
-            app:title="内置下载器" />
+            app:summary="使用内置下载器下载jar文件并自动打开"
+            app:title="内置下载器(实验性功能)" />
+        <Preference
+            app:title="下载路径"
+            app:dependency="smartDownloader"
+            app:isPreferenceVisible="false"
+            app:key="downloadPath"
+            app:icon="@drawable/ic_baseline_sd_storage_24"/>
+    </PreferenceCategory>
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="行为">
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_exit_to_app_24"
             app:key="keepActivity"
@@ -34,39 +44,11 @@
             app:summaryOff="退出杀死进程"
             app:summaryOn="退出保留缓存"
             app:title="缓存后台进程" />
+        <SwitchPreferenceCompat
+            app:icon="@drawable/ic_baseline_show_chart_24"
+            app:key="statistical"
+            app:defaultValue="true"
+            app:summaryOn="访问一个空白网页获取用户使用情况"
+            app:title="用户量统计" />
     </PreferenceCategory>
-
-    <!--
-        <PreferenceCategory app:title="@string/messages_header">
-
-            <EditTextPreference
-                app:key="signature"
-                app:title="@string/signature_title"
-                app:useSimpleSummaryProvider="true" />
-
-            <ListPreference
-                app:defaultValue="reply"
-                app:entries="@array/reply_entries"
-                app:entryValues="@array/reply_values"
-                app:key="reply"
-                app:title="@string/reply_title"
-                app:useSimpleSummaryProvider="true" />
-
-        </PreferenceCategory>
-
-        <PreferenceCategory app:title="@string/sync_header">
-
-            <SwitchPreferenceCompat
-                app:key="sync"
-                app:title="@string/sync_title" />
-
-            <SwitchPreferenceCompat
-                app:dependency="sync"
-                app:key="attachment"
-                app:summaryOff="@string/attachment_summary_off"
-                app:summaryOn="@string/attachment_summary_on"
-                app:title="@string/attachment_title" />
-
-        </PreferenceCategory>
-    -->
 </PreferenceScreen>

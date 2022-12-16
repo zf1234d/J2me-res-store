@@ -1,15 +1,16 @@
 package com.mBZo.jar
 
+import android.app.Activity
 import android.app.Dialog
 import android.app.DownloadManager
 import android.content.*
 import android.content.Context.MODE_PRIVATE
 import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
 import android.text.Html
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +21,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +37,7 @@ import org.json.JSONObject
 import java.io.File
 import java.net.URLDecoder
 import kotlin.concurrent.thread
+
 
 class StoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,7 +122,6 @@ fun web2download(activity: AppCompatActivity,link: String){
             } catch (e: Exception) {
                 web2download(activity,link)
             }
-            //
         }.start()
         //没想到挺长的
     }
@@ -142,7 +144,7 @@ fun web2download(activity: AppCompatActivity,link: String){
                                 .show()
                             val uri: Uri = Uri.parse(url)
                             val request: DownloadManager.Request = DownloadManager.Request(uri)
-                            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
+                            request.setDestinationInExternalPublicDir(activity.getExternalFilesDir("download").toString().substringAfter(Environment.getExternalStorageDirectory().toString()+"/"), filename)
                             request.setDescription("正在下载...")
                             request.setTitle(filename)
                             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
@@ -224,7 +226,6 @@ fun web2download(activity: AppCompatActivity,link: String){
         }
     }
 }
-
 //统一回调
 fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,fileSizeList: List<String>?,about: String?,loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
@@ -247,7 +248,9 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
         //图标
         if (iconLink != null){
             icon.visibility = View.VISIBLE
-            Glide.with(activity).load(iconLink).into(icon)
+            if (isDestroy(activity).not()){
+                Glide.with(activity).load(iconLink).into(icon)
+            }
         }
         //预览图
         if (imageList != null) {
@@ -261,12 +264,12 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
             }
         }
         //下载链接
-        if (linkNameList != null) {
-            if (linkList != null) {
+        if (linkNameList != null && linkNameList.isNotEmpty()) {
+            if (linkList != null && linkList.isNotEmpty()) {
                 //处理下载相关交互
                 downloadFab.visibility = View.VISIBLE
                 val linkNameListA = mutableListOf<String>()
-                if (fileSizeList != null){
+                if (fileSizeList != null && fileSizeList.isNotEmpty()){
                     for (p in 1..linkNameList.size){
                         linkNameListA.add("[${fileSizeList[p-1]}] ${linkNameList[p-1]}")
                     }
@@ -275,7 +278,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                     linkNameListA.addAll(linkNameList)
                 }
                 downloadFab.setOnClickListener {
-                    if (linkNameList.size > 1) {
+                    if (linkNameList.isNotEmpty()) {
                         MaterialAlertDialogBuilder(activity)
                             .setTitle("下载列表")
                             .setItems(linkNameListA.toTypedArray()){_,p ->
@@ -283,7 +286,7 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
                                     web2download(activity,linkList[p])
                                 }
                                 else{
-                                    if (fileSizeList != null){
+                                    if (fileSizeList != null && fileSizeList.isNotEmpty()){
                                         MaterialAlertDialogBuilder(activity)
                                             .setTitle("详情")
                                             .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
@@ -322,7 +325,17 @@ fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<
     }
 }
 
+
+
+
+
 //解析的前置模块
+fun isDestroy(mActivity: Activity?): Boolean {
+    return mActivity == null || mActivity.isFinishing || Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && mActivity.isDestroyed
+}
+
+
+
 fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
     //蓝奏云解析kotlin版 by.mBZo ver1.2
     var finLink="";var data="";var about: String
@@ -438,7 +451,7 @@ private fun apiDecode52emu(activity: StoreActivity, path: String) {
             if (info.contains("暂无下载地址")) {
                 Snackbar.make(activity.findViewById(R.id.floatingActionButton),"暂无下载地址",Snackbar.LENGTH_LONG).show()
             }
-            else {
+            else if (info.contains("【下载地址】")){
                 for (index in info.substringAfter("【下载地址】：<a href=\'").substringBefore("<hr />")
                     .split("</a>|<a href=\'")) {
                     downLinkNameList.add(index.substringAfter("\'>").substringBefore("</a>"))
@@ -447,7 +460,7 @@ private fun apiDecode52emu(activity: StoreActivity, path: String) {
             }
             //解析预览图
             for (index in info.split("img")){
-                if (index.substringAfter("src=\"")!=index){
+                if (index.contains("src=\"")){
                     imagesList.add(index.substringAfter("src=\"").substringBefore("\">"))
                 }
             }
@@ -519,8 +532,10 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String,name: String) {
                             .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
                             .build()
                         thread {
-                            val responseInfo = client.newCall(requestInfo).execute()
-                            contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
+                            try {
+                                val responseInfo = client.newCall(requestInfo).execute()
+                                contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
+                            } catch (_: Exception) { }
                         }
                     }
                     //一次判断结束
@@ -560,7 +575,9 @@ class ImgShowRecyclerAdapter(private val activity: AppCompatActivity, private va
         val iconLink = imgUrlList[position]
         //显示
         //holder.name.text =
-        Glide.with(activity).load(iconLink).into(holder.images)
+        if (isDestroy(activity).not()){
+            Glide.with(activity).load(iconLink).into(holder.images)
+        }
         //点击
         holder.itemView.setOnClickListener {   }
     }

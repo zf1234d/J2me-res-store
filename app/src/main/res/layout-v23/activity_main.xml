@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/home_page_tree"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <ProgressBar
-        android:id="@+id/progressBar2"
         style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/progressBar2"
         android:fitsSystemWindows="false"
         android:indeterminate="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"/>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/home_page_tree"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/progressBar2"
+        android:layout_above="@id/home_nav"/>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/home_nav"
@@ -23,9 +26,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:fitsSystemWindows="false"
+        android:layout_alignParentBottom="true"
         app:labelVisibilityMode="selected"
-        app:menu="@menu/home_nav_menu">
+        app:menu="@menu/home_nav_menu"/>
 
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</RelativeLayout>

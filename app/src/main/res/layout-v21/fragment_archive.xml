@@ -19,10 +19,10 @@
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                app:contentScrim="?android:attr/colorBackground"
                 app:titleCollapseMode="scale"
                 app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
-                app:title="仓库"
-                app:toolbarId="@+id/toolbar">
+                app:title="仓库">
 
                 <androidx.appcompat.widget.Toolbar
                     android:id="@+id/archiveToolbar"

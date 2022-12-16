@@ -19,6 +19,7 @@
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                app:contentScrim="?android:attr/colorBackground"
                 app:titleCollapseMode="scale"
                 app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
                 app:title="J2ME应用商店">

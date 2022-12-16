@@ -62,10 +62,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         val viewpager: ViewPager2 = findViewById(id.home_page_tree)
         val nav: BottomNavigationView = findViewById(id.home_nav)
         val loading: ProgressBar = findViewById(id.progressBar2)
+        viewpager.offscreenPageLimit = 3
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
         mFragments.add(settingrootFragment())
-        viewpager.offscreenPageLimit = 2
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         if (Build.VERSION.SDK_INT >=27){//设置导航栏颜色
@@ -438,8 +438,6 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     recyclerView.adapter = adapter
     btmNav.getOrCreateBadge(id.nav_search).number = count
     btmNav.getOrCreateBadge(id.nav_search).maxCharacterCount = 6
-    //动态读取nav高度，防止遮挡recycler
-    recyclerView.setPadding(0,0,0,btmNav.height)
 
     //设置searchBar
     searchBar.addTextChangedListener {
