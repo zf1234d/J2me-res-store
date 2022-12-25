@@ -24,15 +24,21 @@
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_get_app_24"
             app:key="smartDownloader"
-            app:defaultValue="false"
-            app:summary="使用内置下载器下载jar文件并自动打开"
-            app:title="内置下载器(实验性功能)" />
+            app:defaultValue="true"
+            app:summary="接管下载jar文件并打开"
+            app:title="内置下载器" />
         <Preference
-            app:title="下载路径"
+            app:title="@string/downloadManager"
+            app:summary="点击进入"
             app:dependency="smartDownloader"
             app:isPreferenceVisible="false"
-            app:key="downloadPath"
+            app:key="downloadManager"
             app:icon="@drawable/ic_baseline_sd_storage_24"/>
+        <Preference
+            app:enabled="false"
+            app:title="缓存管理器"
+            app:summary="该功能尚未完成"
+            app:icon="@drawable/ic_baseline_delete_24"/>
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"

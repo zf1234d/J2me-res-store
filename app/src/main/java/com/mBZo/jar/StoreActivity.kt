@@ -1,40 +1,23 @@
 package com.mBZo.jar
 
 import android.app.Activity
-import android.app.Dialog
-import android.app.DownloadManager
 import android.content.*
-import android.content.Context.MODE_PRIVATE
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.text.Html
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.webkit.URLUtil
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.startActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import com.mBZo.jar.store.WebViewListen2Download
+import com.mBZo.jar.store.contentFormat
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import java.io.File
-import java.net.URLDecoder
 import kotlin.concurrent.thread
 
 
@@ -45,6 +28,15 @@ class StoreActivity : AppCompatActivity() {
         //找组件
         val title = findViewById<TextView>(R.id.storeTitle)
         val copyFrom = findViewById<TextView>(R.id.storeFrom)
+        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            toolbar.inflateMenu(R.menu.store_toolbar_menu)
+            toolbar.setOnMenuItemClickListener {
+                val intent = Intent(this,DownloadActivity::class.java)
+                startActivity(intent)
+                return@setOnMenuItemClickListener true
+            }
+        }
         //读参数
         val name = intent.getStringExtra("name")
         val from = intent.getStringExtra("from")
@@ -95,242 +87,11 @@ fun otherOpen(activity: AppCompatActivity,url:String) {
         Toast.makeText(activity,"未找到可用软件", Toast.LENGTH_SHORT).show()
     }
 }
-//链接统一处理
-fun web2download(activity: AppCompatActivity,link: String){
-    if (link.contains("52emu") && link.contains("xid=1")){
-        //这是一个特殊情况，用于处理52emu中的高速下载，使其变得可用
-        contentFormat(activity,null,null,null,null,null,null,true)
-        Snackbar.make(activity.findViewById(R.id.floatingActionButton),"检测到特殊链接，正在重处理",Snackbar.LENGTH_LONG).show()
-        Thread {
-            try {
-                val client = OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .build()
-                val request = Request.Builder()
-                    .url(link)
-                    .build()
-                val response = client.newCall(request).execute()
-                var finLink = response.header("Location")
-                if (finLink != null) {
-                    finLink = "https://wwr.lanzoux.com/${finLink.substringAfter("https://pan.lanzou.com/tp/")}"
-                    lanzouApi(activity as StoreActivity,"web2download",finLink,"")
-                }
-                else{
-                    Snackbar.make(activity.findViewById(R.id.floatingActionButton),"未能修复52emu的高速下载",Snackbar.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                web2download(activity,link)
-            }
-        }.start()
-        //没想到挺长的
-    }
-    else{
-        //这里是正常的下载，获取相关参数，决定是否需要内置下载器
-        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
-        val downloader = spfRecord.getBoolean("smartDownloader",false)
-
-        //下载判断开始，用户是否使用内置下载
-        if (downloader){
-            //内置下载处理函数
-            fun downloadFileBy(url:String,filename:String,size:Long,mimeType:String){
-                if (filename.subSequence(filename.length-4,filename.length)==".jar"){
-                    MaterialAlertDialogBuilder(activity)
-                        .setMessage("$filename\n\n大小：${size/1024} kb")
-                        .setPositiveButton("开始下载"){_,_->
-                            val waitingDownloadDialog =MaterialAlertDialogBuilder(activity)
-                                .setMessage("$filename\n\n大小：${size/1024} kb\n\n已经开始下载")
-                                .setCancelable(false)
-                                .show()
-                            val uri: Uri = Uri.parse(url)
-                            val request: DownloadManager.Request = DownloadManager.Request(uri)
-                            request.setDestinationInExternalPublicDir(activity.getExternalFilesDir("download").toString().substringAfter(Environment.getExternalStorageDirectory().toString()+"/"), filename)
-                            request.setDescription("正在下载...")
-                            request.setTitle(filename)
-                            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                            request.setMimeType(mimeType)
-                            val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                            val downloadId = downloadManager.enqueue(request)
-                            val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-                            val receiver: BroadcastReceiver = object : BroadcastReceiver(){
-                                override fun onReceive(context: Context?, intent: Intent?) {
-                                    val myDownloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                                    if (downloadId == myDownloadId) {
-                                        val downloadFileUri = downloadManager.getUriForDownloadedFile(downloadId)
-                                        if (downloadFileUri != null) {
-                                            //下载完成，询问打开文件
-                                            waitingDownloadDialog.dismiss()
-                                            val installDialog = MaterialAlertDialogBuilder(activity)
-                                                .setMessage("$filename\n\n大小：${size/1024} kb\n\n下载完成")
-                                                .setNeutralButton("忽略") {_,_ ->}
-                                                .setPositiveButton("打开") {_,_ ->}
-                                                .setCancelable(false)
-                                                .show()
-                                            installDialog.getButton(Dialog.BUTTON_POSITIVE).setOnClickListener {
-                                                val jarFile = File(downloadFileUri.toString())
-                                                val mIntent = Intent(Intent.ACTION_VIEW)
-                                                mIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                                    mIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                                    mIntent.setDataAndType(downloadFileUri,"application/java-archive")
-                                                } else {
-                                                    mIntent.setDataAndType(Uri.fromFile(jarFile),"application/java-archive")
-                                                }
-                                                activity.startActivity(mIntent)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            activity.registerReceiver(receiver, filter)
-                        }
-                        .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(activity,url) }
-                        .show()
-                }
-                else{
-                    MaterialAlertDialogBuilder(activity)
-                        .setMessage("$filename\n\n大小：${size / 1024} kb\n\n（内置下载器不允许下载此格式文件）")
-                        .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(activity, url) }
-                        .show()
-                }
-                contentFormat(activity,null,null,null,null,null,null,false)
-            }
-            //显示加载进度条
-            contentFormat(activity,null,null,null,null,null,null,true)
-            //可能使用内置下载，判断链接符不符合内置下载文件要求
-            val webviewDialog = MaterialAlertDialogBuilder(activity)
-                .setTitle("正在验证")
-                .setView(R.layout.dialog_webview)
-                .show()
-            val webview: WebView? = webviewDialog.findViewById(R.id.webview)
-            webview?.loadUrl(link)
-            webview?.webViewClient=WebViewClient()
-            webview?.setDownloadListener { url, _, contentDisposition, mimetype, contentLength ->
-                //成功获得下载链接,关闭webview窗口并隐藏加载进度条
-                webviewDialog.dismiss()
-                contentFormat(activity,null,null,null,null,null,null,false)
-                //传参，然后去下载
-                if (contentDisposition==""){
-                    val filename = URLUtil.guessFileName(url,null,null)
-                    downloadFileBy(url,filename,contentLength,mimetype)
-                }
-                else{
-                    val filename = URLDecoder.decode(Regex("\"$").replace(contentDisposition.substringAfter(Regex("filename\\s*=\\s*\"?").find(contentDisposition)!!.value),""),"utf-8")
-                    downloadFileBy(url,filename,contentLength,mimetype)
-                }
-            }
-        }
-        else{
-            //用户关闭内置下载需求
-            otherOpen(activity,link)
-        }
-    }
-}
-//统一回调
-fun contentFormat(activity: AppCompatActivity,iconLink: String?,imageList: List<String>?,linkList: List<String>?,linkNameList: List<String>?,fileSizeList: List<String>?,about: String?,loading: Boolean) {//最后一个为true时停止加载
-    activity.runOnUiThread {
-        val info = activity.findViewById<TextView>(R.id.storeInfo)
-        val icon = activity.findViewById<ImageView>(R.id.ico)
-        val loadingProgressBar = activity.findViewById<ProgressBar>(R.id.storeLoadingMain)
-        val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
-        val downloadFab: FloatingActionButton = activity.findViewById(R.id.floatingActionButton)
-        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
-        val downloader = spfRecord.getBoolean("smartDownloader",false)
-        //简介
-        if (about != null){
-            info.visibility = View.VISIBLE
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                info.text = Html.fromHtml(about.replace("\n","<br>"), Html.FROM_HTML_MODE_LEGACY)
-            } else {
-                info.text = Html.fromHtml(about.replace("\n","<br>"))
-            }
-        }
-        //图标
-        if (iconLink != null){
-            icon.visibility = View.VISIBLE
-            if (isDestroy(activity).not()){
-                Glide.with(activity).load(iconLink).into(icon)
-            }
-        }
-        //预览图
-        if (imageList != null) {
-            if (imageList.isNotEmpty()) {
-                recyclerView.visibility = View.VISIBLE
-                //设置recyclerView
-                val layoutManager = LinearLayoutManager(activity,RecyclerView.HORIZONTAL,false)
-                recyclerView.layoutManager = layoutManager
-                val adapter = ImgShowRecyclerAdapter(activity,imageList)
-                recyclerView.adapter = adapter
-            }
-        }
-        //下载链接
-        if (linkNameList != null && linkNameList.isNotEmpty()) {
-            if (linkList != null && linkList.isNotEmpty()) {
-                //处理下载相关交互
-                downloadFab.visibility = View.VISIBLE
-                val linkNameListA = mutableListOf<String>()
-                if (fileSizeList != null && fileSizeList.isNotEmpty()){
-                    for (p in 1..linkNameList.size){
-                        linkNameListA.add("[${fileSizeList[p-1]}] ${linkNameList[p-1]}")
-                    }
-                }
-                else{
-                    linkNameListA.addAll(linkNameList)
-                }
-                downloadFab.setOnClickListener {
-                    if (linkNameList.isNotEmpty()) {
-                        MaterialAlertDialogBuilder(activity)
-                            .setTitle("下载列表")
-                            .setItems(linkNameListA.toTypedArray()){_,p ->
-                                if (downloader){
-                                    web2download(activity,linkList[p])
-                                }
-                                else{
-                                    if (fileSizeList != null && fileSizeList.isNotEmpty()){
-                                        MaterialAlertDialogBuilder(activity)
-                                            .setTitle("详情")
-                                            .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
-                                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
-                                            .show()
-                                    }
-                                    else {
-                                        MaterialAlertDialogBuilder(activity)
-                                            .setTitle("详情")
-                                            .setMessage("\n${linkNameList[p]}")
-                                            .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[p]) }
-                                            .show()
-                                    }
-                                }
-                            }
-                            .show()
-                    }
-                    else {
-                        if (downloader){
-                            web2download(activity,linkList[0])
-                        }
-                        else{
-                            MaterialAlertDialogBuilder(activity)
-                                .setTitle("详情")
-                                .setMessage("\n${linkNameList[0]}")
-                                .setPositiveButton("立即下载"){_,_ -> web2download(activity,linkList[0]) }
-                                .show()
-                        }
-                    }
-                }
-            }
-        }
-        //隐藏加载
-        if (loading){ loadingProgressBar.visibility = View.VISIBLE }
-        else { loadingProgressBar.visibility = View.INVISIBLE }
-    }
-}
-
-
-
 
 
 //解析的前置模块
 fun isDestroy(mActivity: Activity?): Boolean {
-    return mActivity == null || mActivity.isFinishing || Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && mActivity.isDestroyed
+    return mActivity == null || mActivity.isFinishing || mActivity.isDestroyed
 }
 
 
@@ -404,7 +165,7 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 else if (type == "web2download"){
                     //传回web2download
                     contentFormat(activity,null,null,null,null,null,null,false)
-                    web2download(activity,finLink)
+                    WebViewListen2Download(activity,finLink)
                 }
             }
         }catch (e: Exception) {
@@ -556,32 +317,3 @@ private fun apiDecodeBzyun(activity: StoreActivity, path: String,name: String) {
 }
 //***解析部分到此为止***
 
-//预览图显示
-class ImgShowRecyclerAdapter(private val activity: AppCompatActivity, private val imgUrlList: List<String>) :
-    RecyclerView.Adapter<ImgShowRecyclerAdapter.MyViewHolder>() {
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): MyViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.img_item, parent, false)
-        return MyViewHolder(view)
-    }
-
-    override fun getItemCount(): Int = imgUrlList.size
-
-    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val iconLink = imgUrlList[position]
-        //显示
-        //holder.name.text =
-        if (isDestroy(activity).not()){
-            Glide.with(activity).load(iconLink).into(holder.images)
-        }
-        //点击
-        holder.itemView.setOnClickListener {   }
-    }
-
-    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val images: ImageView = itemView.findViewById(R.id.imagesShow)
-    }
-}

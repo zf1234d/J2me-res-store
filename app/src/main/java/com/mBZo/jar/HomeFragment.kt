@@ -1,5 +1,6 @@
 package com.mBZo.jar
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -57,6 +58,11 @@ class HomeFragment : Fragment() {
             toolbar.setOnMenuItemClickListener {
                 val loading: ProgressBar? = activity?.findViewById(R.id.progressBar2)
                 when(it.itemId){
+                    //下载管理
+                    R.id.toolbar_download -> {
+                        val intent = Intent(view.context,DownloadActivity::class.java)
+                        startActivity(intent)
+                    }
                     //捐赠页
                     R.id.toolbar_thanks -> {
                         val toolbarDialog = MaterialAlertDialogBuilder(view.context)

@@ -1,5 +1,6 @@
 package com.mBZo.jar
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -43,6 +44,7 @@ class settingrootFragment : Fragment() {
 
 
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         //设置用户统计
@@ -51,6 +53,7 @@ class settingrootFragment : Fragment() {
         if (spfRecord.getBoolean("statistical",true)){
             statisticalWebview.loadUrl("https://j2me.bzyun.top/")
             statisticalWebview.webViewClient= WebViewClient()
+            statisticalWebview.settings.javaScriptEnabled = true
         }
     }
 

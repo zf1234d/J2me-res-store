@@ -5,8 +5,7 @@
         android:id="@+id/toolbar_download"
         android:icon="@drawable/ic_baseline_get_app_24"
         android:orderInCategory="0"
-        android:title="@string/download"
-        android:visible="false"
+        android:title="@string/downloadManager"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/toolbar_thanks"

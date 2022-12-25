@@ -12,6 +12,7 @@
     <string name="connect_img">连接状态</string>
     <string name="icon">图标</string>
     <string name="download">下载</string>
+    <string name="downloadManager">下载管理器</string>
     <string name="notFindBrowser">当前手机未安装浏览器</string>
     <string name="thanks">支持和鼓励</string>
     <string name="updateLogs">更新日志</string>

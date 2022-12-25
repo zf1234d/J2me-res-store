@@ -1,5 +1,6 @@
 package com.mBZo.jar
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.view.View
@@ -22,14 +23,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
             viewpager?.isUserInputEnabled = (newValue as Boolean).not()
             return@setOnPreferenceChangeListener true
         }
-        //下载路径
-        val downloadPath: Preference? = findPreference("downloadPath")
-        downloadPath?.summary = view.context.getExternalFilesDir("download").toString().substringAfter(Environment.getExternalStorageDirectory().toString()+"/")
+        //下载管理
+        val downloadManager: Preference? = findPreference("downloadManager")
         val downloader: SwitchPreferenceCompat? = findPreference("smartDownloader")
-        downloadPath?.isVisible = (downloader?.isChecked == true)
+        downloadManager?.isVisible = (downloader?.isChecked == true)
         downloader?.setOnPreferenceChangeListener { _, newValue ->
-            downloadPath?.isVisible = newValue as Boolean
+            downloadManager?.isVisible = newValue as Boolean
             return@setOnPreferenceChangeListener true
+        }
+        downloadManager?.setOnPreferenceClickListener {
+            val intent = Intent(activity,DownloadActivity::class.java)
+            activity?.startActivity(intent)
+            return@setOnPreferenceClickListener true
         }
         //
 

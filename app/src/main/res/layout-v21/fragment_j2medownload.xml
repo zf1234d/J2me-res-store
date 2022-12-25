@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="8dp"
-                android:visibility="invisible"
+                android:visibility="gone"
                 app:strokeWidth="1px"
                 app:cardCornerRadius="8dp">
 
