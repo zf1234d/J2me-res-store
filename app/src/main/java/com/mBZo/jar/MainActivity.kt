@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"),Html.FROM_HTML_MODE_LEGACY)
                     } else {
+                        @Suppress("DEPRECATION")
                         noticeInfo.text = Html.fromHtml(uc1.replace("\n","<br>"))
                     }
                     noticeInfo.movementMethod = LinkMovementMethod.getInstance()

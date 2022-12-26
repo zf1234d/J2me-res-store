@@ -10,8 +10,8 @@ android {
         applicationId "com.mBZo.jar"
         minSdk 19
         targetSdk 33
-        versionCode 71
-        versionName '3.2'
+        versionCode 72
+        versionName '3.3'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -62,6 +62,7 @@ dependencies {
 
 
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.6.0-beta01'

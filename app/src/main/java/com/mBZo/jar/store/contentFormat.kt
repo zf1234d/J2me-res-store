@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
 import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -12,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mBZo.jar.R
@@ -21,10 +24,11 @@ import com.mBZo.jar.isDestroy
 fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: List<String>?, linkList: List<String>?, linkNameList: List<String>?, fileSizeList: List<String>?, about: String?, loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
         val info = activity.findViewById<TextView>(R.id.storeInfo)
+        val iconRule = activity.findViewById<MaterialCardView>(R.id.icoRule)
         val icon = activity.findViewById<ImageView>(R.id.ico)
         val loadingProgressBar = activity.findViewById<ProgressBar>(R.id.storeLoadingMain)
         val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
-        val downloadFab: FloatingActionButton = activity.findViewById(R.id.floatingActionButton)
+        val downloadButton: MaterialButton = activity.findViewById(R.id.storeDownload)
         val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences",
             Context.MODE_PRIVATE
         )
@@ -35,12 +39,14 @@ fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: Lis
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 info.text = Html.fromHtml(about.replace("\n","<br>"), Html.FROM_HTML_MODE_LEGACY)
             } else {
+                @Suppress("DEPRECATION")
                 info.text = Html.fromHtml(about.replace("\n","<br>"))
             }
+            info.movementMethod = LinkMovementMethod.getInstance()
         }
         //图标
         if (iconLink != null){
-            icon.visibility = View.VISIBLE
+            iconRule.visibility = View.VISIBLE
             if (isDestroy(activity).not()){
                 Glide.with(activity).load(iconLink).into(icon)
             }
@@ -57,24 +63,25 @@ fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: Lis
             }
         }
         //下载链接
-        if (linkNameList != null && linkNameList.isNotEmpty()) {
-            if (linkList != null && linkList.isNotEmpty()) {
+        if (linkNameList?.isNotEmpty() == true) {
+            if (linkList?.isNotEmpty() == true) {
                 //处理下载相关交互
-                downloadFab.visibility = View.VISIBLE
-                val linkNameListA = mutableListOf<String>()
-                if (fileSizeList != null && fileSizeList.isNotEmpty()){
-                    for (p in 1..linkNameList.size){
-                        linkNameListA.add("[${fileSizeList[p-1]}] ${linkNameList[p-1]}")
+                downloadButton.visibility = View.VISIBLE
+                downloadButton.text = "下载"
+                if (linkNameList.size>1) {
+                    var linkDialogShowNameList = mutableListOf<String>()
+                    if (fileSizeList?.isNotEmpty() == true){
+                        for (p in 1..linkNameList.size){
+                            linkDialogShowNameList.add("[${fileSizeList[p-1]}] ${linkNameList[p-1]}")
+                        }
                     }
-                }
-                else{
-                    linkNameListA.addAll(linkNameList)
-                }
-                downloadFab.setOnClickListener {
-                    if (linkNameList.size>1) {
+                    else{
+                        linkDialogShowNameList = linkNameList.toMutableList()
+                    }
+                    downloadButton.setOnClickListener {
                         MaterialAlertDialogBuilder(activity)
                             .setTitle("下载列表")
-                            .setItems(linkNameListA.toTypedArray()){_,p ->
+                            .setItems(linkDialogShowNameList.toTypedArray()){_,p ->
                                 if (downloader){
                                     WebViewListen2Download(activity,linkList[p])
                                 }
@@ -97,7 +104,9 @@ fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: Lis
                             }
                             .show()
                     }
-                    else {
+                }
+                else{
+                    downloadButton.setOnClickListener {
                         if (downloader){
                             WebViewListen2Download(activity,linkList[0])
                         }
