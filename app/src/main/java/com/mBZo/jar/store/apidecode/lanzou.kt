@@ -2,6 +2,7 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.isDestroy
 import com.mBZo.jar.otherOpen
 import com.mBZo.jar.store.WebViewListen2Download
 import com.mBZo.jar.store.contentFormat
@@ -85,26 +86,29 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                 }
             }
         }catch (e: Exception) {
-            activity.runOnUiThread {
-                MaterialAlertDialogBuilder(activity)
-                    .setCancelable(false)
-                    .setTitle("加载失败")
-                    .setMessage("您的网络可能存在问题！\n若多次重试均无效则不排除蓝奏云api变动的可能性。")
-                    .setNegativeButton("重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
-                    .setPositiveButton("退出") {_,_ -> activity.finish()}
-                    .setNeutralButton("显示日志") {_,_ ->
-                        MaterialAlertDialogBuilder(activity)
-                            .setCancelable(false)
-                            .setTitle("失败详情")
-                            .setMessage("auto:$data\n" +
-                                    "finLink:\n$finLink")
-                            .setNegativeButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
-                            .setPositiveButton("退出") {_,_ -> activity.finish()}
-                            .setNeutralButton("原始网页") {_,_ -> otherOpen(activity,url) ;activity.finish()}
-                            .show()
-                    }
-                    .show()
+            if (isDestroy(activity).not()){
+                activity.runOnUiThread {
+                    MaterialAlertDialogBuilder(activity)
+                        .setCancelable(false)
+                        .setTitle("加载失败")
+                        .setMessage("您的网络可能存在问题！\n若多次重试均无效则不排除蓝奏云api变动的可能性。")
+                        .setNegativeButton("重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                        .setPositiveButton("退出") {_,_ -> activity.finish()}
+                        .setNeutralButton("显示日志") {_,_ ->
+                            MaterialAlertDialogBuilder(activity)
+                                .setCancelable(false)
+                                .setTitle("失败详情")
+                                .setMessage("auto:$data\n" +
+                                        "finLink:\n$finLink")
+                                .setNegativeButton("仍然重试") {_,_ -> lanzouApi(activity,type,url,pwd) }
+                                .setPositiveButton("退出") {_,_ -> activity.finish()}
+                                .setNeutralButton("原始网页") {_,_ -> otherOpen(activity,url) ;activity.finish()}
+                                .show()
+                        }
+                        .show()
+                }
             }
+
         }
     }.start()
 }

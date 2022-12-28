@@ -2,6 +2,7 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.isDestroy
 import com.mBZo.jar.store.contentFormat
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -56,14 +57,16 @@ fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
             }//循环结束
             contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
         } catch (e: Exception) {
-            activity.runOnUiThread {
-                MaterialAlertDialogBuilder(activity)
-                    .setCancelable(false)
-                    .setTitle("加载失败")
-                    .setMessage("您的网络可能存在问题！")
-                    .setNegativeButton("重试"){_,_ -> apiDecodeBzyun(activity,path,name) }
-                    .setPositiveButton("退出"){_,_ -> activity.finish() }
-                    .show()
+            if (isDestroy(activity).not()){
+                activity.runOnUiThread {
+                    MaterialAlertDialogBuilder(activity)
+                        .setCancelable(false)
+                        .setTitle("加载失败")
+                        .setMessage("您的网络可能存在问题！")
+                        .setNegativeButton("重试"){_,_ -> apiDecodeBzyun(activity,path,name) }
+                        .setPositiveButton("退出"){_,_ -> activity.finish() }
+                        .show()
+                }
             }
         }
     }.start()

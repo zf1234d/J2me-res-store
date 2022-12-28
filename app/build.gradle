@@ -10,8 +10,8 @@ android {
         applicationId "com.mBZo.jar"
         minSdk 19
         targetSdk 33
-        versionCode 72
-        versionName '3.3'
+        versionCode 73
+        versionName '3.4'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -59,6 +59,7 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.14.2'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
     implementation "com.github.ssseasonnn:DownloadX:1.0.5"
+    implementation "net.lingala.zip4j:zip4j:2.11.2"
 
 
     implementation 'androidx.multidex:multidex:2.0.1'

@@ -8,7 +8,10 @@ import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.view.WindowCompat
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.store.apidecode.*
 
@@ -20,7 +23,7 @@ class StoreActivity : AppCompatActivity() {
         //找组件
         val title = findViewById<TextView>(R.id.storeTitle)
         val copyFrom = findViewById<TextView>(R.id.storeFrom)
-        val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
+        val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             toolbar.inflateMenu(R.menu.store_toolbar_menu)
             toolbar.setOnMenuItemClickListener {

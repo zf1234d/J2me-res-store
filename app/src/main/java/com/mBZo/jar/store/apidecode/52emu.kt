@@ -4,6 +4,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.isDestroy
 import com.mBZo.jar.store.contentFormat
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -53,14 +54,16 @@ fun apiDecode52emu(activity: StoreActivity, path: String) {
                 }
             }
         }catch (e: Exception) {
-            activity.runOnUiThread {
-                MaterialAlertDialogBuilder(activity)
-                    .setCancelable(false)
-                    .setTitle("加载失败")
-                    .setMessage("您的网络可能存在问题！")
-                    .setNegativeButton("重试"){_,_ -> apiDecode52emu(activity,path) }
-                    .setPositiveButton("退出"){_,_ -> activity.finish() }
-                    .show()
+            if (isDestroy(activity).not()){
+                activity.runOnUiThread {
+                    MaterialAlertDialogBuilder(activity)
+                        .setCancelable(false)
+                        .setTitle("加载失败")
+                        .setMessage("您的网络可能存在问题！")
+                        .setNegativeButton("重试"){_,_ -> apiDecode52emu(activity,path) }
+                        .setPositiveButton("退出"){_,_ -> activity.finish() }
+                        .show()
+                }
             }
         }
     }.start()

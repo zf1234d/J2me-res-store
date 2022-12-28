@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
-import android.util.Base64
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -28,11 +27,16 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.mBZo.jar.R.*
 import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import okhttp3.*
+import zlc.season.downloadx.download
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
-import java.util.concurrent.TimeUnit
+import net.lingala.zip4j.ZipFile
 import kotlin.concurrent.schedule
 
 
@@ -41,7 +45,6 @@ var from = mutableListOf<String>()
 var path = mutableListOf<String>()
 var onlineInfo = ""
 var archiveNum=0//本地的库存数
-val archiveB64C= { onlineInfo.substringAfter("{裁剪线}") }//库存列表
 val otaUrl={ onlineInfo.substringAfter("更新地址★").substringBefore("☆更新地址") }
 val archiveVer={ onlineInfo.substringAfter("有效日期★").substringBefore("☆有效日期") }//云端库存版本
 val cloudVer={ onlineInfo.substringAfter("云端版号★").substringBefore("☆云端版号").toInt() }//云端软件版本
@@ -265,12 +268,13 @@ fun lazyWriteFile(path: String,name: String,content: String){
 
 
 //库存更新
-private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
+@OptIn(DelicateCoroutinesApi::class)
+private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int) {
     val loadImg: ImageView = activity.findViewById(id.state1)
     val loadInfo: TextView = activity.findViewById(id.state2)
     val loading: ProgressBar = activity.findViewById(id.progressBar2)
+    val savePath = "${activity.filesDir.absolutePath}/mBZo/java/list/"
     var tip: String
-    var process = 0
     var client: OkHttpClient
     var request: Request
     var response: Response
@@ -278,98 +282,114 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
     Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
     loading.visibility = View.VISIBLE
     //批量下载一串路径
-    fun processDownloadArchive(urlPath: Array<String>) {
-        Thread {
-            fun getArchive(url: String){
-                try {
-                    client = OkHttpClient.Builder()
-                    .connectTimeout(2,TimeUnit.SECONDS)
-                    .readTimeout(3,TimeUnit.SECONDS)
-                    .build()
-                    request = Request.Builder()
-                    .url(url)
-                    .build()
-                    response = client.newCall(request).execute()
-                    val data = response.body.string()
-                    File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText("\n${dcBase64(data)}", Charset.forName("UTF-8"))
-                    process += 1
-                        //时间可能很长啊，记录个进度，没毛病啊
-                    activity.runOnUiThread {
-                        tip = "${activity.getString(string.updateNewArchive)}($process/${urlPath.size})"
-                        loadInfo.text = tip
-                        //下载完成事件
-                        if (process == urlPath.size){
-                            lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list", archiveVer.invoke())
-                            nowReadArchiveList(activity)
+    fun processDownloadArchive(path: MutableList<String>) {
+        var process = 0
+        for (index in path){
+            val saveName = index.substringAfterLast("/").substringBefore(".zip")
+            val downloadTask = GlobalScope.download(index,"$saveName.zip",savePath)
+            downloadTask.state()
+                .onEach {
+                    if (downloadTask.isSucceed()){
+                        activity.runOnUiThread {
+                            tip = "${activity.getString(string.updateNewArchive)}[${process}(释放)/${path.size}]"
+                            loadInfo.text = tip
+                            ZipFile(File("$savePath$saveName.zip")).extractFile(
+                                "$saveName.txt",
+                                savePath)
+                            downloadTask.remove()
+                            val thisWorkContent = File("$savePath$saveName.txt").readText()
+                            File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list")
+                                .appendText("\n$thisWorkContent",Charset.forName("UTF-8"))
+                            File("$savePath$saveName.txt").delete()
+                            process += 1
                         }
                     }
-                } catch (e: Exception) {
-                    getArchive(url)
+                    else if (downloadTask.isStarted()){
+                        if (it.progress.totalSize!=(0).toLong()){
+                            activity.runOnUiThread {
+                                tip = "${activity.getString(string.updateNewArchive)}[${process}(${it.progress.percent().toInt()}%)/${path.size}]"
+                                loadInfo.text = tip
+                            }
+                        }
+                    }
+                    else if (downloadTask.isFailed()){
+                        downloadTask.start()
+                    }
+                }.launchIn(GlobalScope)
+            downloadTask.start()
+        }
+        Thread{
+            while (true){
+                if (process==path.size){
+                    break
                 }
             }
-            for (str in urlPath){
-                getArchive(str)
+            path.clear()
+            lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list", archiveVer.invoke())
+            activity.runOnUiThread {
+                nowReadArchiveList(activity)
             }
         }.start()
     }
-    //下载仓库  参数为（路径，数量，是否下载）
-    fun startDownloadArchive(list1: Array<String?>, list2: Array<Int?>, list4: Array<Boolean?>) {
+    //收集需要下载的条目
+    fun startDownloadArchive(pathList: MutableList<String>, addonPathList: MutableList<String>, stateList: MutableList<Boolean>) {
         loading.visibility = View.VISIBLE
         loadInfo.text = activity.getString(string.updateNewArchive)
         Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
-        //kotlin不支持数组变长度，创建一个动态改变数组长度的fun
-        fun append(arr: Array<String>, element: String): Array<String> {
-            val list: MutableList<String> = arr.toMutableList()
-            list.add(element)
-            return list.toTypedArray()
-        }
-        var urlPath = arrayOf<String>()
-        //拼接默认仓库
-        var localArchiveB64C = archiveB64C.invoke()
-        for (index in 1..archiveNum){
-            urlPath=append(urlPath,dcBase64(localArchiveB64C.substringAfter("{").substringBefore("}")))
-            localArchiveB64C = localArchiveB64C.substringAfter("}")
-        }
-
-        //拼接额外资源
-        for (index in 1..list2.size){
-            if (list4[index-1] == true){
-                for(index0 in 1..list2[index-1]!!){
-                    urlPath=append(urlPath,"$netWorkRoot/jarlist/expandlist/${list1[index-1]}/${list1[index-1]}_$index0")
+        Thread{
+            val finPathList = mutableListOf<String>()
+            finPathList.clear()
+            //拼接默认仓库
+            for (index in pathList){
+                finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${index}.zip")
+            }
+            //拼接额外资源
+            for (index in 1..stateList.size){
+                if (stateList[index-1]){
+                    finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${addonPathList[index-1]}.zip")
                 }
             }
-        }
-        //传入路径批量下载
-        tip = "${activity.getString(string.updateNewArchive)}(0/${urlPath.size})"
-        loadInfo.text = tip
-        processDownloadArchive(urlPath)
+            //传入路径批量下载
+            tip = "${activity.getString(string.updateNewArchive)}(0/${finPathList.size})"
+            activity.runOnUiThread {
+                loadInfo.text = tip
+                pathList.clear()
+                addonPathList.clear()
+                stateList.clear()
+                processDownloadArchive(finPathList)
+            }
+        }.start()
     }
     //询问数量
     fun askAnoArchSelect(data: String) {
+        val list0 = mutableListOf<String>()//不可选泽path列表
+        val list1 = mutableListOf<String>()//path列表
+        val list2 = mutableListOf<String>()//namespace列表
+        val list3 = mutableListOf<Boolean>()//选择结果列表
+        for (index in data.split("\n")){
+            if (index.contains("{") && index.contains("//close").not()){
+                if (index.contains(",")){
+                    list1.add(index.substringAfter("{").substringBefore(","))
+                    list2.add(index.substringAfter(",").substringBefore("}"))
+                    list3.add(false)
+                }
+                else{
+                    list0.add(index.substringAfter("{").substringBefore("}"))
+                }
+            }
+        }
         activity.runOnUiThread{
             loadInfo.text = type
             Glide.with(activity).load(typeImg).into(loadImg)
             loading.visibility = View.GONE
-            var temp =data
-            val list1: Array<String?> = arrayOfNulls (temp.substringAfter("list=").substringBefore("\r\n").toInt())
-            val list2: Array<Int?> = arrayOfNulls (temp.substringAfter("list=").substringBefore("\r\n").toInt())
-            val list3: Array<String?> = arrayOfNulls (temp.substringAfter("list=").substringBefore("\r\n").toInt())
-            val list4: Array<Boolean?> = arrayOfNulls (temp.substringAfter("list=").substringBefore("\r\n").toInt())
-            for (index in 1..temp.substringAfter("list=").substringBefore("\r\n").toInt()){
-                list3[index-1] = temp.substringAfter("{").substringBefore("}")
-                list1[index-1] = list3[index-1]?.substringAfter("{")?.substringBefore(",")?.let { dcBase64(it) }
-                list2[index-1] = list3[index-1]?.substringAfter(",")?.substringBefore(",")?.toInt()
-                list3[index-1] = list3[index-1]?.substringAfterLast(",")?.substringBefore("}")?.let { dcBase64(it) }
-                list4[index-1] = false
-                temp = temp.substringAfter("}")
-            }
             MaterialAlertDialogBuilder(activity)
                 .setTitle("额外库存源(可以不选)")
-                .setMultiChoiceItems(list3,null){_,index,state ->  list4[index] = state}
+                .setMultiChoiceItems(list2.toTypedArray(),null){_,index,state ->  list3[index] = state}
                 .setPositiveButton("开始同步"){ _,_ ->
                     lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list","process")
                     lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
-                    startDownloadArchive(list1,list2,list4)
+                    list2.clear()
+                    startDownloadArchive(list0,list1,list3)
                 }
                 .show()
         }
@@ -379,13 +399,13 @@ private fun syncArchive(activity: AppCompatActivity,type: String,typeImg: Int) {
         try {
             client = OkHttpClient()
             request = Request.Builder()
-                .url("$netWorkRoot/jarlist/expandlist/set.hanpi")
+                .url("$netWorkRoot/jarlist/Archive/setup.hanpi")
                 .build()
             response = client.newCall(request).execute()
             val data = response.body.string()
             askAnoArchSelect(data)
         } catch (e: Exception) {
-            syncArchive(activity,type, typeImg)
+            syncArchive(activity,type,typeImg)
         }
     }.start()
 }
@@ -412,7 +432,11 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     Glide.with(activity).load(drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
-    for (str in File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()){
+    if (File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").exists().not()){
+        lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
+    }
+    val archiveFileLines = File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()
+    for (str in archiveFileLines){
         if (str.contains("\"name\"")){
             name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
             count++//计数
@@ -427,7 +451,6 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
         }
         else if (str.contains("\"from\"")){  from.add(str.substringAfter("\"from\":\"").substringBefore("\""))  }
         else if (str.contains("\"url\"")){  path.add(str.substringAfter("\"url\":\"").substringBefore("\""))  }
-
     }
 
     //设置recyclerView
@@ -457,12 +480,6 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     }
 }
 
-
-
-//解码base64
-fun dcBase64(string: String): String {
-    return  String(Base64.decode(string.toByteArray(),Base64.NO_WRAP))
-}
 
 
 

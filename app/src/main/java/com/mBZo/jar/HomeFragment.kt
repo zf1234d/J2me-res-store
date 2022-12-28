@@ -84,6 +84,7 @@ class HomeFragment : Fragment() {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                         toolbarDialog.setMessage(Html.fromHtml(response.body.string().replace("\n","<br>"),Html.FROM_HTML_MODE_LEGACY))
                                     } else {
+                                        @Suppress("DEPRECATION")
                                         toolbarDialog.setMessage(Html.fromHtml(response.body.string().replace("\n","<br>")))
                                     }
                                 }
@@ -130,6 +131,7 @@ class HomeFragment : Fragment() {
                                         toolbarDialog.setMessage(Html.fromHtml(updateLogDecode,Html.FROM_HTML_MODE_LEGACY))
                                     }
                                     else{
+                                        @Suppress("DEPRECATION")
                                         toolbarDialog.setMessage(Html.fromHtml(updateLogDecode))
                                     }
                                 }
@@ -156,6 +158,7 @@ class HomeFragment : Fragment() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             dialogAboutAdd?.text = Html.fromHtml(addText,Html.FROM_HTML_MODE_LEGACY)
                         } else {
+                            @Suppress("DEPRECATION")
                             dialogAboutAdd?.text = Html.fromHtml(addText)
                         }
                         dialogAboutAdd?.movementMethod = LinkMovementMethod.getInstance()

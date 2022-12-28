@@ -1,8 +1,8 @@
 package com.mBZo.jar.store.apidecode
 
-import android.util.Log
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.isDestroy
 import com.mBZo.jar.store.contentFormat
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -47,14 +47,16 @@ fun apiDecodeIniche(activity: StoreActivity, path: String) {
             val linkName = List(1) {"你知道的，这是什么并不重要"}
             contentFormat(activity,null,imageList,link,linkName,null,gameInfo,false)
         } catch (e: Exception) {
-            activity.runOnUiThread {
-                MaterialAlertDialogBuilder(activity)
-                    .setCancelable(false)
-                    .setTitle("加载失败")
-                    .setMessage("您的网络可能存在问题！")
-                    .setNegativeButton("重试"){_,_ -> apiDecodeIniche(activity,path) }
-                    .setPositiveButton("退出"){_,_ -> activity.finish() }
-                    .show()
+            if (isDestroy(activity).not()){
+                activity.runOnUiThread {
+                    MaterialAlertDialogBuilder(activity)
+                        .setCancelable(false)
+                        .setTitle("加载失败")
+                        .setMessage("您的网络可能存在问题！")
+                        .setNegativeButton("重试"){_,_ -> apiDecodeIniche(activity,path) }
+                        .setPositiveButton("退出"){_,_ -> activity.finish() }
+                        .show()
+                }
             }
         }
     }.start()
