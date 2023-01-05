@@ -27,6 +27,14 @@
             app:defaultValue="true"
             app:summary="接管下载jar文件并打开"
             app:title="内置下载器" />
+        <SwitchPreferenceCompat
+            app:title="自动安装"
+            app:key="downloadAutoInstall"
+            app:summary="下载完成后,自动安装"
+            app:defaultValue="true"
+            app:dependency="smartDownloader"
+            app:isPreferenceVisible="false"
+            app:icon="@drawable/ic_baseline_open_in_new_24"/>
         <Preference
             app:title="@string/downloadManager"
             app:summary="点击进入"

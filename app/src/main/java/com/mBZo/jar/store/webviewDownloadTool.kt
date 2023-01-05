@@ -2,6 +2,8 @@ package com.mBZo.jar.store
 
 import android.annotation.SuppressLint
 import android.content.*
+import android.graphics.Bitmap
+import android.view.View
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.onEach
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import zlc.season.downloadx.download
+import zlc.season.downloadx.utils.formatSize
 import java.io.File
 import java.net.URLDecoder
 
@@ -79,7 +82,21 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                 //使用webview最终处理，确保url是最终下载链接
                 val webview: WebView? = webviewDialog.findViewById(R.id.webview)
                 webview?.loadUrl(link)
-                webview?.webViewClient= WebViewClient()
+                val webClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                        if (url != null) {
+                            view?.loadUrl(url)
+                            webview?.visibility = View.GONE
+                        }
+                        return true
+                    }
+
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        super.onPageFinished(view, url)
+                        webview?.visibility = View.VISIBLE
+                    }
+                }
+                webview?.webViewClient= webClient
                 webview?.settings?.javaScriptEnabled = true
                 //监听webview下载
                 webview?.setDownloadListener { url,_, contentDisposition,_, contentLength ->
@@ -110,7 +127,7 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
     {
         if (filename.subSequence(filename.length-4,filename.length)==".jar"){
             MaterialAlertDialogBuilder(activity)
-                .setMessage("$filename\n\n大小：${size/1024} kb")
+                .setMessage("$filename\n\n大小：${size.formatSize()}")
                 .setPositiveButton("开始下载"){_,_->
                     val logFile = File(activity.filesDir.absolutePath+"/DlLog/"+filename)
                     if (logFile.exists()){
@@ -118,13 +135,17 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                     }
                     else{
                         File(activity.filesDir.absolutePath+"/DlLog/"+filename).writeText(url)
+                        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
+                        val autoInstall = spfRecord.getBoolean("downloadAutoInstall",true)
                         val downloadTask = GlobalScope.download(url,filename,activity.filesDir.absolutePath+"/Download/")
                         downloadTask.state()
                             .onEach {
                                 if (downloadTask.isSucceed()){
-                                    installJar(activity,
-                                        File(activity.filesDir.absolutePath+"/Download/"+filename)
-                                    )
+                                    if (autoInstall){
+                                        installJar(activity,
+                                            File(activity.filesDir.absolutePath+"/Download/"+filename)
+                                        )
+                                    }
                                 }
                             }
                             .launchIn(GlobalScope)
@@ -137,7 +158,7 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
         }
         else{
             MaterialAlertDialogBuilder(activity)
-                .setMessage("$filename\n\n大小：${size / 1024} kb\n\n（内置下载器不允许下载此格式文件）")
+                .setMessage("$filename\n\n大小：${size.formatSize()} kb\n\n（内置下载器不允许下载此格式文件）")
                 .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(activity, url) }
                 .show()
         }

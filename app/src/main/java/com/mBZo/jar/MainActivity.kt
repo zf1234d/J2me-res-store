@@ -350,7 +350,7 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
                 }
             }
             //传入路径批量下载
-            tip = "${activity.getString(string.updateNewArchive)}(0/${finPathList.size})"
+            tip = "${activity.getString(string.updateNewArchive)}[0/${finPathList.size}]"
             activity.runOnUiThread {
                 loadInfo.text = tip
                 pathList.clear()

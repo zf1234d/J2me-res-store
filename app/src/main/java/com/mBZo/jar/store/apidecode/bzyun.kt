@@ -29,8 +29,8 @@ fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
                 temp=data.getJSONObject(index-1).getString("name").toString()
                 if (data.getJSONObject(index-1).getJSONObject("file").toString()!=""){//确认项目不是文件夹
                     //下载列表
-                    if (temp.contains(name)){//确认是可下载文件
-                        downLinkNameList.add(temp.substringAfter(name+"_"))
+                    if (temp.contains(name.substringBefore("_"))){//确认是可下载文件
+                        downLinkNameList.add(temp.substringAfterLast("_"))
                         downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
                         fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024)}kb")
                     }

@@ -23,12 +23,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             viewpager?.isUserInputEnabled = (newValue as Boolean).not()
             return@setOnPreferenceChangeListener true
         }
-        //下载管理
+        //下载管理和自动安装
         val downloadManager: Preference? = findPreference("downloadManager")
+        val downloadAutoInstall: Preference? = findPreference("downloadAutoInstall")
         val downloader: SwitchPreferenceCompat? = findPreference("smartDownloader")
         downloadManager?.isVisible = (downloader?.isChecked == true)
+        downloadAutoInstall?.isVisible = (downloader?.isChecked == true)
         downloader?.setOnPreferenceChangeListener { _, newValue ->
             downloadManager?.isVisible = newValue as Boolean
+            downloadAutoInstall?.isVisible = newValue
             return@setOnPreferenceChangeListener true
         }
         downloadManager?.setOnPreferenceClickListener {
@@ -38,7 +41,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         //
 
-
+        //
 
 
     }

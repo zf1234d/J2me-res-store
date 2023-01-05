@@ -110,7 +110,7 @@ class DownloadRecyclerAdapter(
                 if (downloadedFile.exists()){
                     downloadedFile.delete()
                 }
-                notifyItemChanged(position)
+                notifyItemRangeChanged(position,itemCount)
             }
             holder.loading.visibility = View.GONE
             holder.chipOpen.visibility = View.VISIBLE
