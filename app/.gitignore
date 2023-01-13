@@ -1,3 +1,4 @@
 /build
 /release
 /debug
+/src/main/java/com/mBZo/jar/notpublic/AppCenterSecret.kt
