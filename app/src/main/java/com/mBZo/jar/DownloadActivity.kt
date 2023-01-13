@@ -2,7 +2,6 @@ package com.mBZo.jar
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -35,7 +34,7 @@ class DownloadActivity : AppCompatActivity() {
                     .setPositiveButton("退出") {_,_ -> finish() }
                     .show()
             }
-            val adapter = DownloadRecyclerAdapter(this,lifecycleScope, fileList.toMutableList())
+            val adapter = DownloadRecyclerAdapter(this,fileList.toMutableList())
             recyclerView.adapter = adapter
         }
     }

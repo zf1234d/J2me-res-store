@@ -12,6 +12,7 @@ import android.text.method.LinkMovementMethod
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -27,16 +28,20 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.mBZo.jar.R.*
 import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
+import com.mBZo.jar.ms.AppCenterSecret
+import com.microsoft.appcenter.AppCenter
+import com.microsoft.appcenter.analytics.Analytics
+import com.microsoft.appcenter.crashes.Crashes
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import net.lingala.zip4j.ZipFile
 import okhttp3.*
 import zlc.season.downloadx.download
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
-import net.lingala.zip4j.ZipFile
 import kotlin.concurrent.schedule
 
 
@@ -59,6 +64,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCenter.start(application, AppCenterSecret().get(), Analytics::class.java, Crashes::class.java)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(layout.activity_main)
         val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
         //布置viewpager2
@@ -73,7 +80,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         if (Build.VERSION.SDK_INT >=27){//设置导航栏颜色
-            window.navigationBarColor = getColor(color.navigationBarColor)
+            //window.navigationBarColor = getColor(color.navigationBarColor)
         }
         //设置默认主页为第二个
         val startPage = spfRecord.getString("startPage","home")

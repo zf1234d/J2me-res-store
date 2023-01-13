@@ -1,31 +1,35 @@
 package com.mBZo.jar.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import com.mBZo.jar.DownloadActivity
 import com.mBZo.jar.R
 import com.mBZo.jar.store.installJar
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import zlc.season.downloadx.State
+import zlc.season.downloadx.core.DownloadTask
 import zlc.season.downloadx.download
+import zlc.season.downloadx.utils.formatSize
 import java.io.File
 
 
 class DownloadRecyclerAdapter(
     private val activity: DownloadActivity,
-    private val lifecycleScope: LifecycleCoroutineScope,
     private val fileList: MutableList<File>
 ) :
     RecyclerView.Adapter<DownloadRecyclerAdapter.ViewHolder>() {
     override fun getItemCount(): Int = fileList.size
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.itemView.setOnClickListener {  }
         //文件名
@@ -37,7 +41,7 @@ class DownloadRecyclerAdapter(
         }
         else{
             //下载监听
-            val downloadTask = lifecycleScope.download(fileList[position].readText(),fileList[position].name,activity.filesDir.absolutePath+"/Download/")
+            val downloadTask = GlobalScope.download(fileList[position].readText(),fileList[position].name,activity.filesDir.absolutePath+"/Download/")
             downloadTask.state()
                 .onEach {
                     if (downloadTask.isSucceed()){
@@ -45,40 +49,34 @@ class DownloadRecyclerAdapter(
                     }
                     else if (downloadTask.isStarted()){
                         if (it.progress.totalSize!=(0).toLong()){
-                            viewInDownloading(holder,it)
+                            viewInDownloading(downloadTask,holder,position,it)
                         }
                     }
-                    else if (downloadTask.isFailed()){
-                        viewFailed(holder,position)
+                    else{
+                        viewFailed(downloadTask,holder,position)
                     }
-
-                }.launchIn(lifecycleScope)
+                }.launchIn(GlobalScope)
             downloadTask.start()
         }
 
         //onBindViewHolder
     }
 
-    private fun viewFailed(holder: ViewHolder, position: Int) {
+    private fun viewFailed(downloadTask: DownloadTask, holder: ViewHolder, position: Int) {
         activity.runOnUiThread {
             holder.chipOpen.text = "重试"
             holder.chipDel.text = "删除"
+            holder.chipOpen.setOnClickListener {
+                downloadTask.start()
+            }
             holder.chipDel.setOnClickListener {
                 notifyItemRemoved(position)
-                val baseDownloadPath = activity.filesDir.absolutePath+"/Download/"+fileList[position].name
                 if (fileList[position].exists()){
                     fileList[position].delete()
                 }
                 fileList.remove(fileList[position])
-                //占位文件
-                if (File("$baseDownloadPath.download").exists()){
-                    File("$baseDownloadPath.download").delete()
-                }
-                //下载器缓存
-                if (File("$baseDownloadPath.tmp").exists()){
-                    File("$baseDownloadPath.tmp").delete()
-                }
-                notifyItemChanged(position)
+                downloadTask.remove()
+                notifyItemRangeChanged(position,itemCount)
             }
             holder.loading.visibility = View.GONE
             holder.chipOpen.visibility = View.VISIBLE
@@ -86,10 +84,26 @@ class DownloadRecyclerAdapter(
         }
     }
 
-    private fun viewInDownloading(holder: ViewHolder, state: State) {
+    private fun viewInDownloading(
+        downloadTask: DownloadTask,
+        holder: ViewHolder,
+        position: Int,
+        state: State
+    ) {
         activity.runOnUiThread {
+            holder.chipDel.text = "取消"
+            holder.chipDel.setOnClickListener {
+                notifyItemRemoved(position)
+                if (fileList[position].exists()){
+                    fileList[position].delete()
+                }
+                fileList.remove(fileList[position])
+                downloadTask.remove()
+                notifyItemRangeChanged(position,itemCount)
+            }
             holder.loading.isIndeterminate = false
             holder.loading.progress = state.progress.percent().toInt()
+            holder.chipDel.visibility = View.VISIBLE
         }
     }
 
@@ -99,7 +113,8 @@ class DownloadRecyclerAdapter(
             holder.chipOpen.setOnClickListener{
                 installJar(activity,File(activity.filesDir.absolutePath+"/Download/"+fileList[position].name))
             }
-            holder.chipDel.text = "删除"
+            @SuppressLint("SetTextI18n")
+            holder.chipDel.text = "删除(${File(activity.filesDir.absolutePath+"/Download/"+fileList[position].name).length().formatSize()})"
             holder.chipDel.setOnClickListener {
                 notifyItemRemoved(position)
                 val downloadedFile = File(activity.filesDir.absolutePath+"/Download/"+fileList[position].name)

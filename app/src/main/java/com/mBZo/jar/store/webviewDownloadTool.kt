@@ -83,6 +83,7 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                 val webview: WebView? = webviewDialog.findViewById(R.id.webview)
                 webview?.loadUrl(link)
                 val webClient = object : WebViewClient() {
+                    @Deprecated("Deprecated in Java")
                     override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                         if (url != null) {
                             view?.loadUrl(url)
