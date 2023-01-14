@@ -42,23 +42,6 @@ class settingrootFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settingroot, container, false)
     }
 
-
-
-    @SuppressLint("SetJavaScriptEnabled")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        //设置用户统计
-        val statisticalWebview: WebView = view.findViewById(R.id.statisticalWebview)
-        val spfRecord: SharedPreferences = view.context.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
-        if (spfRecord.getBoolean("statistical",true)){
-            statisticalWebview.loadUrl("https://j2me.bzyun.top/")
-            statisticalWebview.webViewClient= WebViewClient()
-            statisticalWebview.settings.javaScriptEnabled = true
-        }
-    }
-
-
-
     companion object {
         /**
          * Use this factory method to create a new instance of

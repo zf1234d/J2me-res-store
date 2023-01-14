@@ -58,11 +58,5 @@
             app:summaryOff="退出杀死进程"
             app:summaryOn="退出保留缓存"
             app:title="缓存后台进程" />
-        <SwitchPreferenceCompat
-            app:icon="@drawable/ic_baseline_show_chart_24"
-            app:key="statistical"
-            app:defaultValue="true"
-            app:summaryOn="访问一个空白网页获取用户使用情况"
-            app:title="用户量统计" />
     </PreferenceCategory>
 </PreferenceScreen>

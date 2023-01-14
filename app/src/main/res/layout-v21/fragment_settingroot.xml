@@ -34,10 +34,6 @@
 
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
-        <WebView
-            android:id="@+id/statisticalWebview"
-            android:layout_width="0dp"
-            android:layout_height="0dp" />
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/setting_container"
             android:name="com.mBZo.jar.SettingsFragment"

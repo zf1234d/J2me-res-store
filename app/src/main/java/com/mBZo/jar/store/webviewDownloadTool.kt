@@ -2,12 +2,10 @@ package com.mBZo.jar.store
 
 import android.annotation.SuppressLint
 import android.content.*
-import android.graphics.Bitmap
 import android.view.View
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -15,6 +13,7 @@ import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
 import com.mBZo.jar.otherOpen
 import com.mBZo.jar.store.apidecode.lanzouApi
+import com.mBZo.jar.tool.FileLazy
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.launchIn
@@ -135,7 +134,7 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                         Snackbar.make(activity.findViewById(R.id.storeDownload),"无法添加重复任务",Snackbar.LENGTH_LONG).show()
                     }
                     else{
-                        File(activity.filesDir.absolutePath+"/DlLog/"+filename).writeText(url)
+                        FileLazy(logFile.absolutePath).writeNew(url)
                         val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
                         val autoInstall = spfRecord.getBoolean("downloadAutoInstall",true)
                         val downloadTask = GlobalScope.download(url,filename,activity.filesDir.absolutePath+"/Download/")

@@ -28,7 +28,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.mBZo.jar.R.*
 import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
-import com.mBZo.jar.ms.AppCenterSecret
+import com.mBZo.jar.tool.FileLazy
 import com.microsoft.appcenter.AppCenter
 import com.microsoft.appcenter.analytics.Analytics
 import com.microsoft.appcenter.crashes.Crashes
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCenter.start(application, AppCenterSecret().get(), Analytics::class.java, Crashes::class.java)
+        AppCenter.start(application, AppCenterSecret, Analytics::class.java, Crashes::class.java)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(layout.activity_main)
         val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
@@ -79,9 +79,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         mFragments.add(settingrootFragment())
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
-        if (Build.VERSION.SDK_INT >=27){//设置导航栏颜色
-            //window.navigationBarColor = getColor(color.navigationBarColor)
-        }
         //设置默认主页为第二个
         val startPage = spfRecord.getString("startPage","home")
         if (startPage=="home"){
@@ -141,9 +138,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                     //不同情况差异加载内容
                     if (BuildConfig.VERSION_CODE >= cloudVer.invoke()) {
                         if (!File("${filesDir.absolutePath}/mBZo/java/list/0.list").exists()){
-                            lazyWriteFile("${filesDir.absolutePath}/mBZo/java/list/","0.list","000000")
+                            FileLazy("${filesDir.absolutePath}/mBZo/java/list/0.list").writeNew("000000")
                         }
-                        val localAuth = File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()
+                        val localAuth = FileLazy("${filesDir.absolutePath}/mBZo/java/list/0.list").read()
                         if (localAuth == archiveVer.invoke()) {
                             nowReadArchiveList(this)
                         }
@@ -268,12 +265,6 @@ class MainFragmentPagerAdapter(fragmentActivity: FragmentActivity, private val m
 }
 
 
-fun lazyWriteFile(path: String,name: String,content: String){
-    File(path).mkdirs()
-    File("$path/$name").writeText(content)
-}
-
-
 //库存更新
 @OptIn(DelicateCoroutinesApi::class)
 private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int) {
@@ -289,8 +280,7 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
     Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
     loading.visibility = View.VISIBLE
     //批量下载一串路径
-    fun processDownloadArchive(path: MutableList<String>) {
-        var process = 0
+    fun processDownloadArchive(path: MutableList<String>,process: Int) {
         for (index in path){
             val saveName = index.substringAfterLast("/").substringBefore(".zip")
             val downloadTask = GlobalScope.download(index,"$saveName.zip",savePath)
@@ -308,7 +298,16 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
                             File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list")
                                 .appendText("\n$thisWorkContent",Charset.forName("UTF-8"))
                             File("$savePath$saveName.txt").delete()
-                            process += 1
+                            if (process+1>=path.size){
+                                path.clear()
+                                FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew(archiveVer.invoke())
+                                activity.runOnUiThread {
+                                    nowReadArchiveList(activity)
+                                }
+                            }
+                            else{
+                                processDownloadArchive(path, process+1)
+                            }
                         }
                     }
                     else if (downloadTask.isStarted()){
@@ -325,18 +324,6 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
                 }.launchIn(GlobalScope)
             downloadTask.start()
         }
-        Thread{
-            while (true){
-                if (process==path.size){
-                    break
-                }
-            }
-            path.clear()
-            lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list", archiveVer.invoke())
-            activity.runOnUiThread {
-                nowReadArchiveList(activity)
-            }
-        }.start()
     }
     //收集需要下载的条目
     fun startDownloadArchive(pathList: MutableList<String>, addonPathList: MutableList<String>, stateList: MutableList<Boolean>) {
@@ -363,7 +350,7 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
                 pathList.clear()
                 addonPathList.clear()
                 stateList.clear()
-                processDownloadArchive(finPathList)
+                processDownloadArchive(finPathList,0)
             }
         }.start()
     }
@@ -393,8 +380,8 @@ private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int)
                 .setTitle("额外库存源(可以不选)")
                 .setMultiChoiceItems(list2.toTypedArray(),null){_,index,state ->  list3[index] = state}
                 .setPositiveButton("开始同步"){ _,_ ->
-                    lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","0.list","process")
-                    lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
+                    FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew("process")
+                    FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").writeNew()
                     list2.clear()
                     startDownloadArchive(list0,list1,list3)
                 }
@@ -440,9 +427,9 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
     if (File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").exists().not()){
-        lazyWriteFile("${activity.filesDir.absolutePath}/mBZo/java/list/","1.list","")
+        FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").writeNew()
     }
-    val archiveFileLines = File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()
+    val archiveFileLines = FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").readLines()
     for (str in archiveFileLines){
         if (str.contains("\"name\"")){
             name.add(str.substringAfter("\"name\":\"").substringBefore("\""))
