@@ -1,10 +1,10 @@
 package com.mBZo.jar
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -13,7 +13,6 @@ import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.multidex.MultiDex
@@ -25,7 +24,6 @@ import com.bumptech.glide.Glide
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textfield.TextInputEditText
 import com.mBZo.jar.R.*
 import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
 import com.mBZo.jar.tool.FileLazy
@@ -38,6 +36,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import net.lingala.zip4j.ZipFile
 import okhttp3.*
+import rikka.insets.WindowInsetsHelper
+import rikka.layoutinflater.view.LayoutInflaterFactory
 import zlc.season.downloadx.download
 import java.io.File
 import java.nio.charset.Charset
@@ -57,12 +57,13 @@ const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b
 
 
 
-class MainActivity : AppCompatActivity(), View.OnClickListener  {
+class MainActivity : AppCompatActivity(){
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         MultiDex.install(this)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
+        layoutInflater.factory2 = LayoutInflaterFactory(delegate).addOnViewCreatedListener(WindowInsetsHelper.LISTENER)
         super.onCreate(savedInstanceState)
         AppCenter.start(application, AppCenterSecret, Analytics::class.java, Crashes::class.java)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -76,13 +77,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         viewpager.offscreenPageLimit = 3
         mFragments.add(ArchiveFragment())
         mFragments.add(HomeFragment())
-        mFragments.add(settingrootFragment())
+        mFragments.add(SettingRootFragment())
         viewpager.adapter = MainFragmentPagerAdapter(this, mFragments)
         //绑定底栏和viewpager
         //设置默认主页为第二个
         val startPage = spfRecord.getString("startPage","home")
         if (startPage=="home"){
-            viewpager.setCurrentItem(1, false)
+            viewpager.currentItem = 1
             nav.menu.getItem(1).isChecked = true
         }
         //底栏按钮监听
@@ -119,8 +120,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         fun updateConfig() {
             fun updateConfigSave(uc1: String, uc2: String) {
                 runOnUiThread {
-                    val btn1: MaterialCardView = findViewById(id.btn1)
-                    btn1.setOnClickListener(this)
                     val loadImg: ImageView = findViewById(id.state1)
                     val loadInfo: TextView = findViewById(id.state2)
                     val noticeCard: MaterialCardView = findViewById(id.state4)
@@ -155,17 +154,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
                             else {
                                 loadInfo.text = getString(string.findNewArchive)
                             }
-                            Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
+                            Glide.with(loadImg).load(drawable.ic_baseline_update_24).into(loadImg)
                             loading.visibility = View.GONE
                         }
                     }
                     else{
                         if (startPage=="search"){
-                            viewpager.setCurrentItem(1, false)
                             nav.menu.getItem(1).isChecked = true
                         }
                         loadInfo.text = resources.getString(string.findNewApp)
-                        Glide.with(this).load(drawable.ic_baseline_update_24).into(loadImg)
+                        Glide.with(loadImg).load(drawable.ic_baseline_update_24).into(loadImg)
                         loading.visibility = View.GONE
                     }
                 }
@@ -193,63 +191,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         updateConfig()
         //检查更新结束
     }
-    //点击事件
-    //TODO 要加功能
-    override fun onClick(p0: View?) {
-        when (p0?.id) {
-            id.btn1 -> {
-                val loadInfo: TextView = findViewById(id.state2)
-                //同步库存
-                when (loadInfo.text) {
-                    getString(string.findNewArchive),getString(string.findNewArchiveUnexpectedStop) -> {
-                        syncArchive(this,getString(string.findNewArchive), drawable.ic_baseline_update_24)
-                    }
-                    getString(string.findNewApp) -> {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                            intent.data = Uri.parse(otaUrl.invoke())
-                            startActivity(intent,null)
-                        } catch (e: Exception) {
-                            Toast.makeText(this,getString(string.notFindBrowser),Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                    getString(string.allReady) -> {
-                        MaterialAlertDialogBuilder(this)
-                            .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端${cloudVer.invoke()})\n\n库存\n${File("${filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\n目标\n${this.applicationInfo.targetSdkVersion}")
-                            .setPositiveButton("更改库存"){_,_ -> syncArchive(this,getString(string.allReady), drawable.ic_baseline_check_24)}
-                            .show()
-                    }
-                    else -> { }
-                }
-            }
-        }
-    }
     //按键事件
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val nav: BottomNavigationView = findViewById(id.home_nav)
+        val viewpager: ViewPager2 = findViewById(id.home_page_tree)
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            val searchBar: TextInputEditText? = findViewById(id.search_bar)
-            if (searchBar?.hasFocus() == true){
-                searchBar.clearFocus()
-                return false
+            val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
+            val keepApp = spfRecord.getBoolean("keepActivity",true)
+            if (viewpager.currentItem!=1){
+                viewpager.setCurrentItem(1, false)
+                nav.menu.getItem(1).isChecked = true
             }
-            else {
-                val spfRecord: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", MODE_PRIVATE)
-                val keepApp = spfRecord.getBoolean("keepActivity",true)
+            else{
                 if (keepApp) {
                     val intent = Intent(Intent.ACTION_MAIN)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     intent.addCategory(Intent.CATEGORY_HOME)
                     startActivity(intent)
-                    return true
                 }
                 else {
                     finish()
-                    return true
                 }
             }
         }
-        return super.onKeyDown(keyCode, event)
+        return true
     }
 }
 
@@ -267,154 +232,160 @@ class MainFragmentPagerAdapter(fragmentActivity: FragmentActivity, private val m
 
 //库存更新
 @OptIn(DelicateCoroutinesApi::class)
-private fun syncArchive(activity: AppCompatActivity, type: String, typeImg: Int) {
-    val loadImg: ImageView = activity.findViewById(id.state1)
-    val loadInfo: TextView = activity.findViewById(id.state2)
-    val loading: ProgressBar = activity.findViewById(id.progressBar2)
-    val savePath = "${activity.filesDir.absolutePath}/mBZo/java/list/"
-    var tip: String
-    var client: OkHttpClient
-    var request: Request
-    var response: Response
-    loadInfo.text = activity.getString(string.updateNewArchive)
-    Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
-    loading.visibility = View.VISIBLE
-    //批量下载一串路径
-    fun processDownloadArchive(path: MutableList<String>,process: Int) {
-        for (index in path){
-            val saveName = index.substringAfterLast("/").substringBefore(".zip")
-            val downloadTask = GlobalScope.download(index,"$saveName.zip",savePath)
+fun syncArchive(activity: Activity?, type: String, typeImg: Int) {
+    if (activity!=null) {
+        val loadImg: ImageView = activity.findViewById(id.state1)
+        val loadInfo: TextView = activity.findViewById(id.state2)
+        val loading: ProgressBar = activity.findViewById(id.progressBar2)
+        val savePath = "${activity.filesDir.absolutePath}/mBZo/java/list/"
+        var tip: String
+        var client: OkHttpClient
+        var request: Request
+        var response: Response
+        loadInfo.text = activity.getString(string.updateNewArchive)
+        Glide.with(loadImg).load(drawable.ic_baseline_query_builder_24).into(loadImg)
+        loading.visibility = View.VISIBLE
+        //批量下载一串路径
+        fun processDownloadArchive(path: MutableList<String>, process: Int) {
+            val saveName = path[process].substringAfterLast("/").substringBefore(".zip")
+            val downloadTask = GlobalScope.download(path[process], "$saveName.zip", savePath)
             downloadTask.state()
                 .onEach {
-                    if (downloadTask.isSucceed()){
+                    if (downloadTask.isSucceed()) {
                         activity.runOnUiThread {
-                            tip = "${activity.getString(string.updateNewArchive)}[${process}(释放)/${path.size}]"
+                            tip =
+                                "${activity.getString(string.updateNewArchive)}[${process + 1}(释放)/${path.size}]"
                             loadInfo.text = tip
-                            ZipFile(File("$savePath$saveName.zip")).extractFile(
-                                "$saveName.txt",
-                                savePath)
-                            downloadTask.remove()
+                            ZipFile(File("$savePath$saveName.zip")).extractAll(savePath)
                             val thisWorkContent = File("$savePath$saveName.txt").readText()
-                            File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list")
-                                .appendText("\n$thisWorkContent",Charset.forName("UTF-8"))
+                            File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText(
+                                "\n$thisWorkContent",
+                                Charset.forName("UTF-8")
+                            )
                             File("$savePath$saveName.txt").delete()
-                            if (process+1>=path.size){
+                            downloadTask.remove()
+                            if (process + 1 >= path.size) {
                                 path.clear()
-                                FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew(archiveVer.invoke())
-                                activity.runOnUiThread {
-                                    nowReadArchiveList(activity)
-                                }
-                            }
-                            else{
-                                processDownloadArchive(path, process+1)
+                                FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew(
+                                    archiveVer.invoke()
+                                )
+                                nowReadArchiveList(activity)
+                            } else {
+                                processDownloadArchive(path, process + 1)
                             }
                         }
-                    }
-                    else if (downloadTask.isStarted()){
-                        if (it.progress.totalSize!=(0).toLong()){
+                    } else if (downloadTask.isStarted()) {
+                        if (it.progress.totalSize != (0).toLong()) {
                             activity.runOnUiThread {
-                                tip = "${activity.getString(string.updateNewArchive)}[${process}(${it.progress.percent().toInt()}%)/${path.size}]"
+                                tip = "${activity.getString(string.updateNewArchive)}[${process}(${
+                                    it.progress.percent().toInt()
+                                }%)/${path.size}]"
                                 loadInfo.text = tip
                             }
                         }
-                    }
-                    else if (downloadTask.isFailed()){
+                    } else if (downloadTask.isFailed()) {
                         downloadTask.start()
                     }
                 }.launchIn(GlobalScope)
             downloadTask.start()
         }
-    }
-    //收集需要下载的条目
-    fun startDownloadArchive(pathList: MutableList<String>, addonPathList: MutableList<String>, stateList: MutableList<Boolean>) {
-        loading.visibility = View.VISIBLE
-        loadInfo.text = activity.getString(string.updateNewArchive)
-        Glide.with(activity).load(drawable.ic_baseline_query_builder_24).into(loadImg)
-        Thread{
-            val finPathList = mutableListOf<String>()
-            finPathList.clear()
-            //拼接默认仓库
-            for (index in pathList){
-                finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${index}.zip")
-            }
-            //拼接额外资源
-            for (index in 1..stateList.size){
-                if (stateList[index-1]){
-                    finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${addonPathList[index-1]}.zip")
+
+        //收集需要下载的条目
+        fun startDownloadArchive(
+            pathList: MutableList<String>,
+            addonPathList: MutableList<String>,
+            stateList: MutableList<Boolean>
+        ) {
+            loading.visibility = View.VISIBLE
+            loadInfo.text = activity.getString(string.updateNewArchive)
+            Glide.with(loadImg).load(drawable.ic_baseline_query_builder_24).into(loadImg)
+            Thread {
+                val finPathList = mutableListOf<String>()
+                finPathList.clear()
+                //拼接默认仓库
+                for (index in pathList) {
+                    finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${index}.zip")
+                }
+                //拼接额外资源
+                for (index in 1..stateList.size) {
+                    if (stateList[index - 1]) {
+                        finPathList.add("${netWorkRoot}/jarlist/Archive/raw/${addonPathList[index - 1]}.zip")
+                    }
+                }
+                //传入路径批量下载
+                tip = "${activity.getString(string.updateNewArchive)}[0/${finPathList.size}]"
+                activity.runOnUiThread {
+                    loadInfo.text = tip
+                    pathList.clear()
+                    addonPathList.clear()
+                    stateList.clear()
+                    processDownloadArchive(finPathList, 0)
+                }
+            }.start()
+        }
+
+        //询问数量
+        fun askAnoArchSelect(data: String) {
+            val list0 = mutableListOf<String>()//不可选泽path列表
+            val list1 = mutableListOf<String>()//path列表
+            val list2 = mutableListOf<String>()//namespace列表
+            val list3 = mutableListOf<Boolean>()//选择结果列表
+            for (index in data.split("\n")) {
+                if (index.contains("{") && index.contains("//close").not()) {
+                    if (index.contains(",")) {
+                        list1.add(index.substringAfter("{").substringBefore(","))
+                        list2.add(index.substringAfter(",").substringBefore("}"))
+                        list3.add(false)
+                    } else {
+                        list0.add(index.substringAfter("{").substringBefore("}"))
+                    }
                 }
             }
-            //传入路径批量下载
-            tip = "${activity.getString(string.updateNewArchive)}[0/${finPathList.size}]"
             activity.runOnUiThread {
-                loadInfo.text = tip
-                pathList.clear()
-                addonPathList.clear()
-                stateList.clear()
-                processDownloadArchive(finPathList,0)
+                loadInfo.text = type
+                Glide.with(loadImg).load(typeImg).into(loadImg)
+                loading.visibility = View.GONE
+                MaterialAlertDialogBuilder(activity)
+                    .setTitle("额外库存源(可以不选)")
+                    .setMultiChoiceItems(
+                        list2.toTypedArray(),
+                        null
+                    ) { _, index, state -> list3[index] = state }
+                    .setPositiveButton("开始同步") { _, _ ->
+                        FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew(
+                            "process"
+                        )
+                        FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").writeNew()
+                        list2.clear()
+                        startDownloadArchive(list0, list1, list3)
+                    }
+                    .show()
+            }
+        }
+        //网络线程
+        Thread {
+            try {
+                client = OkHttpClient()
+                request = Request.Builder()
+                    .url("$netWorkRoot/jarlist/Archive/setup.hanpi")
+                    .build()
+                response = client.newCall(request).execute()
+                val data = response.body.string()
+                askAnoArchSelect(data)
+            } catch (e: Exception) {
+                syncArchive(activity, type, typeImg)
             }
         }.start()
     }
-    //询问数量
-    fun askAnoArchSelect(data: String) {
-        val list0 = mutableListOf<String>()//不可选泽path列表
-        val list1 = mutableListOf<String>()//path列表
-        val list2 = mutableListOf<String>()//namespace列表
-        val list3 = mutableListOf<Boolean>()//选择结果列表
-        for (index in data.split("\n")){
-            if (index.contains("{") && index.contains("//close").not()){
-                if (index.contains(",")){
-                    list1.add(index.substringAfter("{").substringBefore(","))
-                    list2.add(index.substringAfter(",").substringBefore("}"))
-                    list3.add(false)
-                }
-                else{
-                    list0.add(index.substringAfter("{").substringBefore("}"))
-                }
-            }
-        }
-        activity.runOnUiThread{
-            loadInfo.text = type
-            Glide.with(activity).load(typeImg).into(loadImg)
-            loading.visibility = View.GONE
-            MaterialAlertDialogBuilder(activity)
-                .setTitle("额外库存源(可以不选)")
-                .setMultiChoiceItems(list2.toTypedArray(),null){_,index,state ->  list3[index] = state}
-                .setPositiveButton("开始同步"){ _,_ ->
-                    FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew("process")
-                    FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").writeNew()
-                    list2.clear()
-                    startDownloadArchive(list0,list1,list3)
-                }
-                .show()
-        }
-    }
-    //网络线程
-    Thread {
-        try {
-            client = OkHttpClient()
-            request = Request.Builder()
-                .url("$netWorkRoot/jarlist/Archive/setup.hanpi")
-                .build()
-            response = client.newCall(request).execute()
-            val data = response.body.string()
-            askAnoArchSelect(data)
-        } catch (e: Exception) {
-            syncArchive(activity,type,typeImg)
-        }
-    }.start()
 }
 
 //读仓库
 @SuppressLint("NotifyDataSetChanged")
-fun nowReadArchiveList(activity: AppCompatActivity) {
+fun nowReadArchiveList(activity: Activity) {
     val loading: ProgressBar = activity.findViewById(id.progressBar2)
     val loadImg: ImageView = activity.findViewById(id.state1)
     val loadInfo: TextView = activity.findViewById(id.state2)
-    val filterNameList = mutableListOf<String>()
-    val filterFromList = mutableListOf<String>()
-    val filterPathList = mutableListOf<String>()
-    val searchBar: TextInputEditText = activity.findViewById(id.search_bar)
-    val recyclerView: RecyclerView = activity.findViewById(id.recyclerView)
+    val recyclerView: RecyclerView = activity.findViewById(id.recycler_archive)
     val btmNav: BottomNavigationView = activity.findViewById(id.home_nav)
     var count = 0
     //清空list中遗留的数据
@@ -423,7 +394,7 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     path = mutableListOf()
     //改变界面
     loadInfo.text = activity.getString(string.allReady)
-    Glide.with(activity).load(drawable.ic_baseline_check_24).into(loadImg)
+    Glide.with(loadImg).load(drawable.ic_baseline_check_24).into(loadImg)
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
     if (File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").exists().not()){
@@ -448,30 +419,12 @@ fun nowReadArchiveList(activity: AppCompatActivity) {
     }
 
     //设置recyclerView
-    filterNameList.addAll(name)
-    filterFromList.addAll(from)
-    filterPathList.addAll(path)
     val layoutManager = LinearLayoutManager(activity)
     recyclerView.layoutManager = layoutManager
-    val adapter = ArchiveRecyclerAdapter(activity,filterNameList,filterFromList,filterPathList)
+    val adapter = ArchiveRecyclerAdapter(activity, name, from, path)
     recyclerView.adapter = adapter
     btmNav.getOrCreateBadge(id.nav_search).number = count
     btmNav.getOrCreateBadge(id.nav_search).maxCharacterCount = 6
-
-    //设置searchBar
-    searchBar.addTextChangedListener {
-        filterNameList.clear()
-        filterFromList.clear()
-        filterPathList.clear()
-        for (i in 1..name.size) {
-            if (name[i-1].contains(searchBar.text.toString())){
-                filterNameList.add(name[i-1])
-                filterFromList.add(from[i-1])
-                filterPathList.add(path[i-1])
-            }
-        }
-        adapter.notifyDataSetChanged()
-    }
 }
 
 

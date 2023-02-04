@@ -24,6 +24,7 @@ class DownloadActivity : AppCompatActivity() {
                 for (i in 0 until modifiedFileList.size){
                     if (fileList[index].lastModified()>=modifiedFileList[i].lastModified()){
                         modifiedFileList.add(i,fileList[index])
+                        break
                     }
                     else{
                         if (i+1==modifiedFileList.size){

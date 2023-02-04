@@ -4,25 +4,42 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".settingrootFragment">
+    tools:context=".SettingRootFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appbar"
+            android:layout_width="match_parent"
+            android:layout_height="192dp"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$Behavior"
+            app:fitsSystemWindowsInsets="top"
+            app:elevation="0dp">
+
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:titleCollapseMode="scale"
+                app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
+                app:title="设置">
+
                 <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    app:title="设置" />
+                    app:layout_collapseMode="pin"/>
+
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/setting_container"
             android:name="com.mBZo.jar.SettingsFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </FrameLayout>

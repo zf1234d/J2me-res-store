@@ -1,5 +1,6 @@
 package com.mBZo.jar.store
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
@@ -9,19 +10,17 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.mBZo.jar.R
 import com.mBZo.jar.adapter.ImgShowRecyclerAdapter
 import com.mBZo.jar.isDestroy
 
-fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: List<String>?, linkList: List<String>?, linkNameList: List<String>?, fileSizeList: List<String>?, about: String?, loading: Boolean) {//最后一个为true时停止加载
+fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<String>?=null, linkList: List<String>?=null, linkNameList: List<String>?=null, fileSizeList: List<String>?=null, about: String?=null, loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
         val info = activity.findViewById<TextView>(R.id.storeInfo)
         val iconRule = activity.findViewById<MaterialCardView>(R.id.icoRule)
@@ -48,7 +47,7 @@ fun contentFormat(activity: AppCompatActivity, iconLink: String?, imageList: Lis
         if (iconLink != null){
             iconRule.visibility = View.VISIBLE
             if (isDestroy(activity).not()){
-                Glide.with(activity).load(iconLink).into(icon)
+                Glide.with(icon.context).load(iconLink).into(icon)
             }
         }
         //预览图

@@ -38,7 +38,7 @@ fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
                     if (temp.contains("img") && temp.contains("ErrLog.txt").not()){imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp") }
                     //图标
                     if (temp.contains("pic") && temp.contains("ErrLog.txt").not()){
-                        contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp",null,null,null,null,null,true)
+                        contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp", loading = true)
                     }
                     //简介
                     if (temp=="gameInfo.html"){
@@ -48,14 +48,14 @@ fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
                         thread {
                             try {
                                 val responseInfo = client.newCall(requestInfo).execute()
-                                contentFormat(activity,null,null,null,null,null,responseInfo.body.string(),false)
+                                contentFormat(activity,about = responseInfo.body.string(), loading = false)
                             } catch (_: Exception) { }
                         }
                     }
                     //一次判断结束
                 }
             }//循环结束
-            contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList,null,true)
+            contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,fileSizeList, loading = true)
         } catch (e: Exception) {
             if (isDestroy(activity).not()){
                 activity.runOnUiThread {

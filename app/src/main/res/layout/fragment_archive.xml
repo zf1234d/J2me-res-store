@@ -6,24 +6,41 @@
     android:layout_height="match_parent"
     tools:context=".ArchiveFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/archive_appbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="仓库" />
+            android:layout_height="192dp"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$Behavior"
+            app:fitsSystemWindowsInsets="top"
+            app:elevation="0dp">
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/search_container"
-            android:name="com.mBZo.jar.searchpage"
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:titleCollapseMode="scale"
+                app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed"
+                app:title="仓库">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/archive_toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"/>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            android:id="@+id/recycler_archive"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
+            android:scrollbarSize="5dp"
+            android:scrollbars="vertical" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
 </FrameLayout>

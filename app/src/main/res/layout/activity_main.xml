@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    app:edgeToEdge="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <androidx.viewpager2.widget.ViewPager2
-        android:fitsSystemWindows="true"
-        android:layout_marginBottom="@dimen/m3_bottom_nav_min_height"
+        android:layout_above="@id/home_nav"
         android:id="@+id/home_page_tree"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:ignore="PrivateResource" />
     <ProgressBar
+        app:fitsSystemWindowsInsets="top"
         style="?android:attr/progressBarStyleHorizontal"
         android:id="@+id/progressBar2"
-        android:fitsSystemWindows="true"
         android:indeterminate="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
     <com.google.android.material.bottomnavigation.BottomNavigationView
+        app:fitsSystemWindowsInsets="bottom"
+        android:layout_alignParentBottom="true"
         android:id="@+id/home_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:fitsSystemWindows="true"
         app:labelVisibilityMode="selected"
-        app:menu="@menu/home_nav_menu"/>
+        app:menu="@menu/main_nav_menu"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</RelativeLayout>

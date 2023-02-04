@@ -1,16 +1,17 @@
 package com.mBZo.jar.store
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.*
 import android.view.View
 import android.webkit.URLUtil
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.isDestroy
 import com.mBZo.jar.otherOpen
 import com.mBZo.jar.store.apidecode.lanzouApi
 import com.mBZo.jar.tool.FileLazy
@@ -27,11 +28,11 @@ import java.net.URLDecoder
 
 @OptIn(DelicateCoroutinesApi::class)
 @SuppressLint("SetJavaScriptEnabled")
-class WebViewListen2Download(activity: AppCompatActivity, link: String){
+class WebViewListen2Download(activity: Activity, link: String){
     init {
         if (link.contains("52emu") && link.contains("xid=1")){
             //这是一个特殊情况，用于处理52emu中的高速下载，使其变得可用
-            contentFormat(activity,null,null,null,null,null,null,true)
+            contentFormat(activity,loading = true)
             Snackbar.make(activity.findViewById(R.id.storeDownload),"检测到特殊链接，正在重处理", Snackbar.LENGTH_LONG).show()
             Thread {
                 try {
@@ -101,16 +102,18 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                 //监听webview下载
                 webview?.setDownloadListener { url,_, contentDisposition,_, contentLength ->
                     //成功获得下载链接,关闭webview窗口并隐藏加载进度条
-                    webviewDialog.dismiss()
-                    contentFormat(activity,null,null,null,null,null,null,false)
+                    webviewDialog?.dismiss()
+                    contentFormat(activity,loading = false)
                     //传参，然后去下载
-                    if (contentDisposition==""){
-                        val filename = URLUtil.guessFileName(url,null,null)
-                        downloadFileBy(activity, url, filename, contentLength)
-                    }
-                    else{
-                        val filename = URLDecoder.decode(Regex("\"$").replace(contentDisposition.substringAfter(Regex("filename\\s*=\\s*\"?").find(contentDisposition)!!.value),""),"utf-8")
-                        downloadFileBy(activity, url, filename, contentLength)
+                    if (isDestroy(activity).not()){
+                        if (contentDisposition==""){
+                            val filename = URLUtil.guessFileName(url,null,null)
+                            downloadFileBy(activity, url, filename, contentLength)
+                        }
+                        else{
+                            val filename = URLDecoder.decode(Regex("\"$").replace(contentDisposition.substringAfter(Regex("filename\\s*=\\s*\"?").find(contentDisposition)!!.value),""),"utf-8")
+                            downloadFileBy(activity, url, filename, contentLength)
+                        }
                     }
                 }
             }
@@ -119,7 +122,7 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
 
 
     private fun downloadFileBy(
-        activity: AppCompatActivity,
+        activity: Activity,
         url: String,
         filename: String,
         size: Long
@@ -162,6 +165,6 @@ class WebViewListen2Download(activity: AppCompatActivity, link: String){
                 .setPositiveButton("通过外部软件下载"){_,_-> otherOpen(activity, url) }
                 .show()
         }
-        contentFormat(activity,null,null,null,null,null,null,false)
+        contentFormat(activity,loading = false)
     }
 }

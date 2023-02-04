@@ -17,11 +17,8 @@ class FileLazy(private val path: String){
 
     //文件操作
     private val file: File = File(path)
-    fun writeNew(content: String){
+    fun writeNew(content: String = ""){
         file.writeText(content)
-    }
-    fun writeNew(){
-        file.writeText("")
     }
     fun writeAddonStart(content: String){
         file.writeText("${content}${file.readText()}")

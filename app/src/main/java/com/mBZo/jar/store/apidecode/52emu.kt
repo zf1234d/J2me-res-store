@@ -47,7 +47,7 @@ fun apiDecode52emu(activity: StoreActivity, path: String) {
             }
             activity.runOnUiThread {
                 if (downLinkList.size == 0){
-                    contentFormat(activity,null,imagesList,null,null,null,info,false)
+                    contentFormat(activity,null,imagesList,about = info, loading = false)
                 }
                 else{
                     contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)

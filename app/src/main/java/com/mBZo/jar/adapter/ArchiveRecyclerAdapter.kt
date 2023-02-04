@@ -1,16 +1,16 @@
 package com.mBZo.jar.adapter
 
+import android.app.Activity
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
 
-class ArchiveRecyclerAdapter(private val activity: AppCompatActivity, private val nameList: List<String>, private  val fromList: List<String>, private val pathList: List<String>) :
+class ArchiveRecyclerAdapter(private val activity: Activity?, private val nameList: List<String>, private  val fromList: List<String>, private val pathList: List<String>) :
     RecyclerView.Adapter<ArchiveRecyclerAdapter.MyViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -35,7 +35,7 @@ class ArchiveRecyclerAdapter(private val activity: AppCompatActivity, private va
             intent.putExtra("name",nameList[position])
             intent.putExtra("from",fromList[position])
             intent.putExtra("path",pathList[position])
-            activity.startActivity(intent)
+            activity?.startActivity(intent)
         }
     }
 

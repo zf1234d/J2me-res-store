@@ -1,8 +1,15 @@
 package com.mBZo.jar
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.*
+import android.widget.FrameLayout
+import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.AppBarLayout
+import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -27,6 +34,7 @@ class ArchiveFragment : Fragment() {
         }
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -36,6 +44,51 @@ class ArchiveFragment : Fragment() {
     }
 
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val filterNameList = mutableListOf<String>()
+        val filterFromList = mutableListOf<String>()
+        val filterPathList = mutableListOf<String>()
+        val appbar: AppBarLayout = view.findViewById(R.id.archive_appbar)
+        val toolbar: Toolbar = view.findViewById(R.id.archive_toolbar)
+        val recyclerView: RecyclerView = view.findViewById(R.id.recycler_archive)
+        toolbar.inflateMenu(R.menu.archive_toolbar_menu)
+        val searchView: SearchView = toolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
+        searchView.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return true
+            }
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onQueryTextChange(newText: String?): Boolean {
+                println(newText)
+                filterNameList.clear()
+                filterFromList.clear()
+                filterPathList.clear()
+                for (i in 1..name.size) {
+                    if (newText!=null && name[i-1].contains(newText)){
+                        filterNameList.add(name[i-1])
+                        filterFromList.add(from[i-1])
+                        filterPathList.add(path[i-1])
+                    }
+                }
+                val adapter = ArchiveRecyclerAdapter(activity,filterNameList,filterFromList,filterPathList)
+                recyclerView.adapter = adapter
+                recyclerView.adapter?.notifyDataSetChanged()
+                return true
+            }
+        })
+        searchView.addOnAttachStateChangeListener(object :View.OnAttachStateChangeListener{
+            override fun onViewAttachedToWindow(v: View) {
+                appbar.setExpanded(false)
+                recyclerView.isNestedScrollingEnabled = false
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                searchView.onActionViewCollapsed()
+                recyclerView.isNestedScrollingEnabled = true
+            }
+        })
+    }
 
 
 

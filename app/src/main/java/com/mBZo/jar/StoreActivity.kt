@@ -8,9 +8,7 @@ import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat.startActivity
-import androidx.core.view.WindowCompat
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.store.apidecode.*
@@ -75,13 +73,17 @@ class StoreActivity : AppCompatActivity() {
 
 
 //跳转浏览器
-fun otherOpen(activity: AppCompatActivity,url:String) {
+fun otherOpen(activity: Activity,url:String) {
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(url)
         startActivity(activity,intent,null)
     } catch (e: Exception) {
-        Toast.makeText(activity,"未找到可用软件", Toast.LENGTH_SHORT).show()
+        if (isDestroy(activity).not()){
+            activity.runOnUiThread {
+                Toast.makeText(activity,"未找到浏览器", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
 
