@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
@@ -133,17 +134,16 @@ class DownloadRecyclerAdapter(
             holder.chipShare.text = "分享"
             holder.chipShare.setOnClickListener {
                 try {
-                    val mIntent = Intent(Intent.ACTION_SEND)
-                    mIntent.putExtra(Intent.EXTRA_SUBJECT, fileList[position].name)
-                    mIntent.type = "application/java-archive"
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        mIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        mIntent.putExtra(Intent.EXTRA_STREAM,
-                            FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID +".fileProvider",fileDownloaded))
+                    val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID +".fileProvider",fileDownloaded)
                     } else {
-                        mIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(fileDownloaded))
+                        Uri.fromFile(fileDownloaded)
                     }
-                    holder.itemView.context.startActivity(mIntent)
+                    ShareCompat.IntentBuilder(activity)
+                        .setChooserTitle(fileList[position].name)
+                        .setType("*/*")
+                        .setStream(uri)
+                        .startChooser()
                 } catch (e: Exception) {
                     if (isDestroy(activity).not()){
                         activity.runOnUiThread {
