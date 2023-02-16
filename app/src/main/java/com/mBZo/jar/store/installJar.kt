@@ -7,9 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.BuildConfig
-import com.mBZo.jar.isDestroy
+import com.mBZo.jar.tool.isDestroy
 import java.io.File
 
 @SuppressLint("QueryPermissionsNeeded")

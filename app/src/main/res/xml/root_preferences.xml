@@ -37,16 +37,10 @@
             app:icon="@drawable/ic_baseline_open_in_new_24"/>
         <Preference
             app:title="@string/downloadManager"
-            app:summary="点击进入"
             app:dependency="smartDownloader"
             app:isPreferenceVisible="false"
             app:key="downloadManager"
             app:icon="@drawable/ic_baseline_sd_storage_24"/>
-        <Preference
-            app:enabled="false"
-            app:title="缓存管理器"
-            app:summary="该功能尚未完成"
-            app:icon="@drawable/ic_baseline_delete_24"/>
     </PreferenceCategory>
     <PreferenceCategory
         app:iconSpaceReserved="false"

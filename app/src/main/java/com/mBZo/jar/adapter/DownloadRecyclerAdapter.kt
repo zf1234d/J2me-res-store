@@ -16,8 +16,8 @@ import com.google.android.material.chip.Chip
 import com.mBZo.jar.BuildConfig
 import com.mBZo.jar.DownloadActivity
 import com.mBZo.jar.R
-import com.mBZo.jar.isDestroy
 import com.mBZo.jar.store.installJar
+import com.mBZo.jar.tool.isDestroy
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.launchIn
@@ -88,7 +88,7 @@ class DownloadRecyclerAdapter(
             }
             holder.loading.visibility = View.GONE
             holder.chipOpen.visibility = View.VISIBLE
-            holder.chipShare.visibility = View.INVISIBLE
+            holder.chipShare.visibility = View.GONE
             holder.chipDel.visibility = View.VISIBLE
         }
     }
@@ -100,8 +100,8 @@ class DownloadRecyclerAdapter(
         state: State
     ) {
         activity.runOnUiThread {
-            holder.chipDel.text = "取消"
-            holder.chipDel.setOnClickListener {
+            holder.chipOpen.text = "取消"
+            holder.chipOpen.setOnClickListener {
                 notifyItemRemoved(position)
                 if (fileList[position].exists()){
                     fileList[position].delete()
@@ -110,10 +110,15 @@ class DownloadRecyclerAdapter(
                 downloadTask.remove()
                 notifyItemRangeChanged(position,itemCount)
             }
+            @SuppressLint("SetTextI18n")
+            holder.chipShare.text = "${state.progress.downloadSizeStr()}/${state.progress.totalSizeStr()}"
+            holder.chipShare.setOnClickListener {  }
+            holder.chipDel.text = state.progress.percentStr()
+            holder.chipDel.setOnClickListener {  }
             holder.loading.isIndeterminate = false
             holder.loading.progress = state.progress.percent().toInt()
-            holder.chipOpen.visibility = View.INVISIBLE
-            holder.chipShare.visibility = View.INVISIBLE
+            holder.chipOpen.visibility = View.VISIBLE
+            holder.chipShare.visibility = View.VISIBLE
             holder.chipDel.visibility = View.VISIBLE
         }
     }

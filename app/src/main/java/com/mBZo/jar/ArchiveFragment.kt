@@ -53,7 +53,8 @@ class ArchiveFragment : Fragment() {
         val toolbar: Toolbar = view.findViewById(R.id.archive_toolbar)
         val recyclerView: RecyclerView = view.findViewById(R.id.recycler_archive)
         toolbar.inflateMenu(R.menu.archive_toolbar_menu)
-        val searchView: SearchView = toolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
+        val searchItem = toolbar.menu.findItem(R.id.toolbar_search)
+        val searchView: SearchView = searchItem.actionView as SearchView
         searchView.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return true
@@ -77,6 +78,12 @@ class ArchiveFragment : Fragment() {
                 return true
             }
         })
+        searchView.setOnQueryTextFocusChangeListener { v, hasFocus ->
+            if (hasFocus.not()){
+                searchItem.collapseActionView()
+            }
+        }
+
         searchView.addOnAttachStateChangeListener(object :View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(v: View) {
                 appbar.setExpanded(false)
@@ -89,7 +96,6 @@ class ArchiveFragment : Fragment() {
             }
         })
     }
-
 
 
 

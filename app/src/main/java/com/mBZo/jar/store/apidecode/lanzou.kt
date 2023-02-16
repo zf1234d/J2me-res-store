@@ -2,10 +2,10 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
-import com.mBZo.jar.isDestroy
 import com.mBZo.jar.otherOpen
 import com.mBZo.jar.store.WebViewListen2Download
 import com.mBZo.jar.store.contentFormat
+import com.mBZo.jar.tool.isDestroy
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request

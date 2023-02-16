@@ -7,6 +7,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.mBZo.jar.tool.FileLazy
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
@@ -33,9 +34,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
             downloadAutoInstall?.isVisible = newValue
             return@setOnPreferenceChangeListener true
         }
+        //判断是否有下载管理是否为空，为空不可点
         downloadManager?.setOnPreferenceClickListener {
-            val intent = Intent(activity,DownloadActivity::class.java)
-            activity?.startActivity(intent)
+            if (downloadManager.summary!="无下载内容"){
+                val fileList = FileLazy(view.context.filesDir.absolutePath+"/DlLog/").listFiles()
+                if (fileList!=null && fileList.isNotEmpty()){
+                    val intent = Intent(activity,DownloadActivity::class.java)
+                    activity?.startActivity(intent)
+                }
+                else{
+                    downloadManager.summary = "无下载内容"
+                    Thread{
+                        Thread.sleep(300)
+                        activity?.runOnUiThread {
+                            downloadManager.summary = ""
+                        }
+                    }.start()
+                }
+            }
             return@setOnPreferenceClickListener true
         }
         //

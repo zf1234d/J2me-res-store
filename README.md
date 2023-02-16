@@ -10,6 +10,5 @@
 
 ## 捐赠
 * 请备注为对j2me应用商店的捐赠，否则可能无法统计到位
-### 微信
 [微信二维码](https://alist.bzyun.top/d/%E5%88%86%E4%BA%AB/%E6%94%B6%E6%AC%BE%E7%A0%81/Wechat.png)
 [支付宝二维码](https://alist.bzyun.top/d/%E5%88%86%E4%BA%AB/%E6%94%B6%E6%AC%BE%E7%A0%81/Alipay.webp)

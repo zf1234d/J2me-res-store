@@ -12,13 +12,12 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.R
 import com.mBZo.jar.adapter.ImgShowRecyclerAdapter
-import com.mBZo.jar.isDestroy
+import com.mBZo.jar.tool.imageLoad
 
 fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<String>?=null, linkList: List<String>?=null, linkNameList: List<String>?=null, fileSizeList: List<String>?=null, about: String?=null, loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
@@ -46,9 +45,7 @@ fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<St
         //图标
         if (iconLink != null){
             iconRule.visibility = View.VISIBLE
-            if (isDestroy(activity).not()){
-                Glide.with(icon.context).load(iconLink).into(icon)
-            }
+            imageLoad(icon,iconLink)
         }
         //预览图
         if (imageList != null) {
@@ -57,7 +54,7 @@ fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<St
                 //设置recyclerView
                 val layoutManager = LinearLayoutManager(activity, RecyclerView.HORIZONTAL,false)
                 recyclerView.layoutManager = layoutManager
-                val adapter = ImgShowRecyclerAdapter(activity,imageList)
+                val adapter = ImgShowRecyclerAdapter(imageList)
                 recyclerView.adapter = adapter
             }
         }

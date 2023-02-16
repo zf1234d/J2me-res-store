@@ -42,9 +42,9 @@ class DownloadActivity : AppCompatActivity() {
         }
         else{
             MaterialAlertDialogBuilder(this)
-                .setCancelable(false)
+                .setOnDismissListener { finish() }
                 .setTitle("无下载内容")
-                .setPositiveButton("退出") {_,_ -> finish() }
+                .setPositiveButton("退出") {_,_ ->  }
                 .show()
         }
     }

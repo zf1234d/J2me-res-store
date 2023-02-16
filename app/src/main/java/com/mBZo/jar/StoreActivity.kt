@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat.startActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.store.apidecode.*
+import com.mBZo.jar.tool.isDestroy
 
 
 class StoreActivity : AppCompatActivity() {
@@ -87,9 +88,4 @@ fun otherOpen(activity: Activity,url:String) {
     }
 }
 
-
-//解析的前置模块
-fun isDestroy(mActivity: Activity?): Boolean {
-    return mActivity == null || mActivity.isFinishing || mActivity.isDestroyed
-}
 

@@ -20,13 +20,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.bumptech.glide.Glide
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.R.*
 import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
 import com.mBZo.jar.tool.FileLazy
+import com.mBZo.jar.tool.imageLoad
 import com.microsoft.appcenter.AppCenter
 import com.microsoft.appcenter.analytics.Analytics
 import com.microsoft.appcenter.crashes.Crashes
@@ -40,7 +40,6 @@ import rikka.insets.WindowInsetsHelper
 import rikka.layoutinflater.view.LayoutInflaterFactory
 import zlc.season.downloadx.download
 import java.io.File
-import java.nio.charset.Charset
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -54,7 +53,6 @@ val otaUrl={ onlineInfo.substringAfter("更新地址★").substringBefore("☆�
 val archiveVer={ onlineInfo.substringAfter("有效日期★").substringBefore("☆有效日期") }//云端库存版本
 val cloudVer={ onlineInfo.substringAfter("云端版号★").substringBefore("☆云端版号").toInt() }//云端软件版本
 const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b822b9563/_apis/git/repositories/589e5978-bff8-4f4d-a328-c045f4237299/items?path="
-
 
 
 class MainActivity : AppCompatActivity(){
@@ -154,7 +152,7 @@ class MainActivity : AppCompatActivity(){
                             else {
                                 loadInfo.text = getString(string.findNewArchive)
                             }
-                            Glide.with(loadImg).load(drawable.ic_baseline_update_24).into(loadImg)
+                            imageLoad(loadImg,drawable.ic_baseline_update_24)
                             loading.visibility = View.GONE
                         }
                     }
@@ -163,7 +161,7 @@ class MainActivity : AppCompatActivity(){
                             nav.menu.getItem(1).isChecked = true
                         }
                         loadInfo.text = resources.getString(string.findNewApp)
-                        Glide.with(loadImg).load(drawable.ic_baseline_update_24).into(loadImg)
+                        imageLoad(loadImg,drawable.ic_baseline_update_24)
                         loading.visibility = View.GONE
                     }
                 }
@@ -243,7 +241,7 @@ fun syncArchive(activity: Activity?, type: String, typeImg: Int) {
         var request: Request
         var response: Response
         loadInfo.text = activity.getString(string.updateNewArchive)
-        Glide.with(loadImg).load(drawable.ic_baseline_query_builder_24).into(loadImg)
+        imageLoad(loadImg,drawable.ic_baseline_query_builder_24)
         loading.visibility = View.VISIBLE
         //批量下载一串路径
         fun processDownloadArchive(path: MutableList<String>, process: Int) {
@@ -252,28 +250,44 @@ fun syncArchive(activity: Activity?, type: String, typeImg: Int) {
             downloadTask.state()
                 .onEach {
                     if (downloadTask.isSucceed()) {
-                        activity.runOnUiThread {
-                            tip =
-                                "${activity.getString(string.updateNewArchive)}[${process + 1}(释放)/${path.size}]"
-                            loadInfo.text = tip
-                            ZipFile(File("$savePath$saveName.zip")).extractAll(savePath)
-                            val thisWorkContent = File("$savePath$saveName.txt").readText()
-                            File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").appendText(
-                                "\n$thisWorkContent",
-                                Charset.forName("UTF-8")
-                            )
-                            File("$savePath$saveName.txt").delete()
-                            downloadTask.remove()
-                            if (process + 1 >= path.size) {
-                                path.clear()
-                                FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list").writeNew(
-                                    archiveVer.invoke()
-                                )
-                                nowReadArchiveList(activity)
-                            } else {
-                                processDownloadArchive(path, process + 1)
+                        //开进线程里,防止意外
+                        Thread{
+                            try {
+                                tip = "${activity.getString(string.updateNewArchive)}[${process + 1}(解压)/${path.size}]"
+                                val fileComps = File("$savePath$saveName.zip")
+                                val fileRes = File("$savePath$saveName.txt")
+                                val fileRn = File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list")
+                                //回UI
+                                activity.runOnUiThread {
+                                    loadInfo.text = tip
+                                    ZipFile(fileComps).extractAll(savePath)
+                                    tip = "${activity.getString(string.updateNewArchive)}[${process + 1}(写入)/${path.size}]"
+                                    loadInfo.text = tip
+                                    val thisWorkContent = fileRes.readText()
+                                    fileRn.appendText("\n$thisWorkContent")
+                                    if (fileRes.exists()){ fileRes.delete() }
+                                    downloadTask.remove()
+                                    if (process + 1 >= path.size) {
+                                        tip = "${activity.getString(string.updateNewArchive)}[${process + 1}(载入)/${path.size}]"
+                                        loadInfo.text = tip
+                                        path.clear()
+                                        FileLazy("${activity.filesDir.absolutePath}/mBZo/java/list/0.list")
+                                            .writeNew(archiveVer.invoke())
+                                        nowReadArchiveList(activity)
+                                    } else {
+                                        tip = "${activity.getString(string.updateNewArchive)}[${process + 1}(请求)/${path.size}]"
+                                        loadInfo.text = tip
+                                        processDownloadArchive(path, process + 1)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                activity.runOnUiThread {
+
+                                    downloadTask.remove()
+                                    loadInfo.text = activity.getString(string.findNewArchiveUnexpectedStop)
+                                }
                             }
-                        }
+                        }.start()
                     } else if (downloadTask.isStarted()) {
                         if (it.progress.totalSize != (0).toLong()) {
                             activity.runOnUiThread {
@@ -298,7 +312,7 @@ fun syncArchive(activity: Activity?, type: String, typeImg: Int) {
         ) {
             loading.visibility = View.VISIBLE
             loadInfo.text = activity.getString(string.updateNewArchive)
-            Glide.with(loadImg).load(drawable.ic_baseline_query_builder_24).into(loadImg)
+            imageLoad(loadImg,drawable.ic_baseline_query_builder_24)
             Thread {
                 val finPathList = mutableListOf<String>()
                 finPathList.clear()
@@ -343,7 +357,7 @@ fun syncArchive(activity: Activity?, type: String, typeImg: Int) {
             }
             activity.runOnUiThread {
                 loadInfo.text = type
-                Glide.with(loadImg).load(typeImg).into(loadImg)
+                imageLoad(loadImg,typeImg)
                 loading.visibility = View.GONE
                 MaterialAlertDialogBuilder(activity)
                     .setTitle("额外库存源(可以不选)")
@@ -394,7 +408,7 @@ fun nowReadArchiveList(activity: Activity) {
     path = mutableListOf()
     //改变界面
     loadInfo.text = activity.getString(string.allReady)
-    Glide.with(loadImg).load(drawable.ic_baseline_check_24).into(loadImg)
+    imageLoad(loadImg,drawable.ic_baseline_check_24)
     loading.visibility = View.GONE
     //读文件并转换成列表然后循环判断类型
     if (File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").exists().not()){

@@ -2,8 +2,8 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
-import com.mBZo.jar.isDestroy
 import com.mBZo.jar.store.contentFormat
+import com.mBZo.jar.tool.isDestroy
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
