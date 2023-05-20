@@ -3,7 +3,6 @@ package com.mBZo.jar
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.*
-import android.widget.FrameLayout
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
@@ -46,9 +45,7 @@ class ArchiveFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val filterNameList = mutableListOf<String>()
-        val filterFromList = mutableListOf<String>()
-        val filterPathList = mutableListOf<String>()
+        val filterList = mutableListOf<Array<String>>()
         val appbar: AppBarLayout = view.findViewById(R.id.archive_appbar)
         val toolbar: Toolbar = view.findViewById(R.id.archive_toolbar)
         val recyclerView: RecyclerView = view.findViewById(R.id.recycler_archive)
@@ -61,29 +58,18 @@ class ArchiveFragment : Fragment() {
             }
             @SuppressLint("NotifyDataSetChanged")
             override fun onQueryTextChange(newText: String?): Boolean {
-                println(newText)
-                filterNameList.clear()
-                filterFromList.clear()
-                filterPathList.clear()
-                for (i in 1..name.size) {
-                    if (newText!=null && name[i-1].contains(newText)){
-                        filterNameList.add(name[i-1])
-                        filterFromList.add(from[i-1])
-                        filterPathList.add(path[i-1])
+                filterList.clear()
+                for (i in 1..gameList.size) {
+                    if (newText!=null && gameList[i-1][0].contains(newText)){
+                        filterList.add(gameList[i-1])
                     }
                 }
-                val adapter = ArchiveRecyclerAdapter(activity,filterNameList,filterFromList,filterPathList)
+                val adapter = ArchiveRecyclerAdapter(activity,filterList)
                 recyclerView.adapter = adapter
                 recyclerView.adapter?.notifyDataSetChanged()
                 return true
             }
         })
-        searchView.setOnQueryTextFocusChangeListener { v, hasFocus ->
-            if (hasFocus.not()){
-                searchItem.collapseActionView()
-            }
-        }
-
         searchView.addOnAttachStateChangeListener(object :View.OnAttachStateChangeListener{
             override fun onViewAttachedToWindow(v: View) {
                 appbar.setExpanded(false)

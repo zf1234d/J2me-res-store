@@ -4,46 +4,54 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
 import com.mBZo.jar.store.contentFormat
 import com.mBZo.jar.tool.isDestroy
+import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
-fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
-    val addPath = "https://od.bzyun.top/api/?path=/J2ME应用商店$path/$name"
+fun apiDecodeBzyunCn(activity: StoreActivity, path: String, name: String) {
+    val rootUrl = "https://store.j2me.bzyun.top"
     Thread {
         try {
+            val requestBody: FormBody = FormBody.Builder()
+                .add("path","/J2ME应用商店$path/$name")
+                .add("password","")
+                .add("page","1")
+                .add("per_page","100")
+                .add("refresh","false")
+                .build()
             val client = OkHttpClient()
             val request = Request.Builder()
-                .url(addPath)
+                .url("${rootUrl}/api/fs/list")
+                .post(requestBody)
                 .build()
             val response = client.newCall(request).execute()
             //解析
-            val data = JSONObject(response.body.string()).getJSONObject("folder").getJSONArray("value")
+            val data = JSONObject(response.body.string()).getJSONObject("data").getJSONArray("content")
             val downLinkList = mutableListOf<String>()
             val downLinkNameList = mutableListOf<String>()
             val fileSizeList = mutableListOf<String>()
             val imagesList = mutableListOf<String>()
-            var temp:String
-            for (index in 1..data.length()){
-                temp=data.getJSONObject(index-1).getString("name").toString()
-                if (data.getJSONObject(index-1).getJSONObject("file").toString()!=""){//确认项目不是文件夹
+            for (index in 0 until  data.length()){
+                val indexName=data.getJSONObject(index).getString("name").toString()
+                if (data.getJSONObject(index).getBoolean("is_dir").not()){//确认项目不是文件夹
                     //下载列表
-                    if (temp.contains(name.substringBefore("_"))){//确认是可下载文件
-                        downLinkNameList.add(temp.substringAfterLast("_"))
-                        downLinkList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
-                        fileSizeList.add("${data.getJSONObject(index-1).getString("size").toInt().div(1024)}kb")
+                    if (indexName.contains(name.substringBefore("_"))){//确认是可下载文件
+                        downLinkNameList.add(indexName.substringAfterLast("_"))
+                        downLinkList.add("${rootUrl}/d/J2ME应用商店$path/$name/$indexName")
+                        fileSizeList.add("${data.getJSONObject(index).getString("size").toInt().div(1024)}kb")
                     }
                     //预览图
-                    if (temp.contains("img") && temp.contains("ErrLog.txt").not()){imagesList.add("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp") }
+                    if (indexName.contains("img") && indexName.contains("ErrLog.txt").not()){imagesList.add("${rootUrl}/d/J2ME应用商店$path/$name/$indexName") }
                     //图标
-                    if (temp.contains("pic") && temp.contains("ErrLog.txt").not()){
-                        contentFormat(activity,"https://od.bzyun.top/api/raw/?path=/J2ME应用商店/$path/$name/$temp", loading = true)
+                    if (indexName.contains("pic") && indexName.contains("ErrLog.txt").not()){
+                        contentFormat(activity,"${rootUrl}/d/J2ME应用商店$path/$name/$indexName", loading = true)
                     }
                     //简介
-                    if (temp=="gameInfo.html"){
+                    if (indexName=="gameInfo.html"){
                         val requestInfo = Request.Builder()
-                            .url("https://od.bzyun.top/api/raw/?path=/J2ME应用商店$path/$name/$temp")
+                            .url("${rootUrl}/d/J2ME应用商店$path/$name/$indexName")
                             .build()
                         thread {
                             try {
@@ -63,7 +71,7 @@ fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String) {
                         .setCancelable(false)
                         .setTitle("加载失败")
                         .setMessage("您的网络可能存在问题！")
-                        .setNegativeButton("重试"){_,_ -> apiDecodeBzyun(activity,path,name) }
+                        .setNegativeButton("重试"){_,_ -> apiDecodeBzyunCn(activity,path,name) }
                         .setPositiveButton("退出"){_,_ -> activity.finish() }
                         .show()
                 }

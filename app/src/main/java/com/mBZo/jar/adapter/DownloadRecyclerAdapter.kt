@@ -1,7 +1,6 @@
 package com.mBZo.jar.adapter
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.view.LayoutInflater

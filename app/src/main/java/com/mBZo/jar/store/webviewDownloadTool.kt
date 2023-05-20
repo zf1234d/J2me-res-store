@@ -33,7 +33,7 @@ class WebViewListen2Download(activity: Activity, link: String){
         if (link.contains("52emu") && link.contains("xid=1")){
             //这是一个特殊情况，用于处理52emu中的高速下载，使其变得可用
             contentFormat(activity,loading = true)
-            Snackbar.make(activity.findViewById(R.id.storeDownload),"检测到特殊链接，正在重处理", Snackbar.LENGTH_LONG).show()
+            Snackbar.make(activity.findViewById(R.id.storeDownloadManager),"检测到特殊链接，正在重处理", Snackbar.LENGTH_LONG).setAnchorView(activity.findViewById(R.id.storeDownloadManager)).show()
             Thread {
                 try {
                     val client = OkHttpClient.Builder()
@@ -50,14 +50,15 @@ class WebViewListen2Download(activity: Activity, link: String){
                     }
                     else{
                         activity.runOnUiThread {
-                            Snackbar.make(activity.findViewById(R.id.storeDownload),"未能修复52emu的高速下载",
-                                Snackbar.LENGTH_LONG).show()
+                            Snackbar.make(activity.findViewById(R.id.storeDownload),"未能修复52emu的高速下载", Snackbar.LENGTH_LONG)
+                                .setAnchorView(activity.findViewById(R.id.storeDownloadManager))
+                                .show()
                         }
                     }
                 } catch (e: Exception) {
                     activity.runOnUiThread {
                         Snackbar.make(activity.findViewById(R.id.storeDownload),"下载出错，请检查网络状况",
-                            Snackbar.LENGTH_LONG).show()
+                            Snackbar.LENGTH_LONG).setAnchorView(activity.findViewById(R.id.storeDownloadManager)).show()
                     }
                 }
             }.start()
@@ -134,7 +135,9 @@ class WebViewListen2Download(activity: Activity, link: String){
                 .setPositiveButton("开始下载"){_,_->
                     val logFile = File(activity.filesDir.absolutePath+"/DlLog/"+filename)
                     if (logFile.exists()){
-                        Snackbar.make(activity.findViewById(R.id.storeDownload),"无法添加重复任务",Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(activity.findViewById(R.id.storeDownload),"无法添加重复任务",Snackbar.LENGTH_LONG)
+                            .setAnchorView(activity.findViewById(R.id.storeDownloadManager))
+                            .show()
                     }
                     else{
                         FileLazy(logFile.absolutePath).writeNew(url)
@@ -153,7 +156,9 @@ class WebViewListen2Download(activity: Activity, link: String){
                             }
                             .launchIn(GlobalScope)
                         downloadTask.start()
-                        Snackbar.make(activity.findViewById(R.id.storeDownload),"下载任务已添加",Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(activity.findViewById(R.id.storeDownload),"下载任务已添加",Snackbar.LENGTH_LONG)
+                            .setAnchorView(activity.findViewById(R.id.storeDownloadManager))
+                            .show()
                     }
                 }
                 .setNegativeButton("通过外部软件下载"){_,_-> otherOpen(activity,url) }

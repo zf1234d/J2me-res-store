@@ -7,34 +7,36 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
 
-class ArchiveRecyclerAdapter(private val activity: Activity?, private val nameList: List<String>, private  val fromList: List<String>, private val pathList: List<String>) :
+class ArchiveRecyclerAdapter(private val activity: Activity?, private val list: MutableList<Array<String>>) :
     RecyclerView.Adapter<ArchiveRecyclerAdapter.MyViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
     ): MyViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_archive, parent, false)
+        val nav: BottomNavigationView? = activity?.findViewById(R.id.home_nav)
+        nav?.getOrCreateBadge(R.id.nav_search)?.number = itemCount
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_archive, parent, false)
         return MyViewHolder(view)
     }
 
-    override fun getItemCount(): Int = nameList.size
+    override fun getItemCount(): Int = list.size
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val itemName = nameList[position]
-        val itemFrom = fromList[position]
+        val itemName = list[position][0]
+        val itemFrom = list[position][2]
         //显示
         holder.name.text = itemName
         holder.from.text = itemFrom
         //点击
         holder.itemView.setOnClickListener {
             val intent = Intent(holder.itemView.context, StoreActivity::class.java)
-            intent.putExtra("name",nameList[position])
-            intent.putExtra("from",fromList[position])
-            intent.putExtra("path",pathList[position])
+            intent.putExtra("name",list[position][0])
+            intent.putExtra("from",list[position][2])
+            intent.putExtra("path",list[position][3])
             activity?.startActivity(intent)
         }
     }

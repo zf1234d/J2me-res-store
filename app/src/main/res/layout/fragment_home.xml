@@ -100,7 +100,6 @@
                 </com.google.android.material.card.MaterialCardView>
 
 
-
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/state4"
                     android:layout_width="match_parent"

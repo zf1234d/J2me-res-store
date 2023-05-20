@@ -1,12 +1,13 @@
 package com.mBZo.jar
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
@@ -21,6 +23,7 @@ import com.microsoft.appcenter.AppCenter
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -185,11 +188,19 @@ class HomeFragment : Fragment() {
             true
         }
 
+        //检测谷歌play
+        val metaData: Bundle? = requireActivity().packageManager.getApplicationInfo(
+            requireActivity().packageName,
+            PackageManager.GET_META_DATA
+        ).metaData
+        val play = metaData?.getBoolean("com.android.vending.splits.required",false)
+        isPlay = play != null
+
 
         //获取软件版本
-        val versioncard: TextView = view.findViewById(R.id.state3)
+        val versionCard: TextView = view.findViewById(R.id.state3)
         val versionText = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-        versioncard.text = versionText
+        versionCard.text = versionText
         //绑定按钮1
         val btn1: MaterialCardView = view.findViewById(R.id.btn1)
         btn1.setOnClickListener {
@@ -212,8 +223,15 @@ class HomeFragment : Fragment() {
                     }
                 }
                 getString(R.string.allReady) -> {
+                    val archiveFile = File("${view.context.filesDir.absolutePath}/mBZo/java/list/0.list")
+                    val archiveVer = if (archiveFile.exists()){
+                        archiveFile.readText()
+                    } else{
+                        archiveFile.writeText("000000")
+                        "000000"
+                    }
                     MaterialAlertDialogBuilder(view.context)
-                        .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端${cloudVer.invoke()})\n\n库存\n${File("${view.context.filesDir.absolutePath}/mBZo/java/list/0.list").readText()}\n\n通道\n${BuildConfig.BUILD_TYPE}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\n目标\n${view.context.applicationInfo.targetSdkVersion}")
+                        .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端${cloudVer.invoke()})\n\n库存\n${archiveVer}\n\n通道\n${if(isPlay==true) "play" else if(isPlay==false) BuildConfig.BUILD_TYPE else "checking..."}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\n目标\n${view.context.applicationInfo.targetSdkVersion}")
                         .setPositiveButton("更改库存"){_,_ -> syncArchive(activity,getString(R.string.allReady), R.drawable.ic_baseline_check_24)}
                         .show()
                 }

@@ -4,7 +4,7 @@
     <string name="home">主页</string>
     <string name="archive">仓库</string>
     <string name="settings">设置</string>
-    <string name="findNewArchive">发现新库存，点击同步</string>
+    <string name="findNewArchive">库存有变化，点击修改</string>
     <string name="findNewArchiveUnexpectedStop">同步意外中止，点击修复</string>
     <string name="updateNewArchive">正在同步……</string>
     <string name="findNewApp">发现新版本，点击更新</string>

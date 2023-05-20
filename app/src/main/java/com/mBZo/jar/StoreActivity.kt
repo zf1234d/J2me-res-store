@@ -3,33 +3,31 @@ package com.mBZo.jar
 import android.app.Activity
 import android.content.*
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.startActivity
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.mBZo.jar.store.apidecode.*
 import com.mBZo.jar.tool.isDestroy
+import rikka.insets.WindowInsetsHelper
+import rikka.layoutinflater.view.LayoutInflaterFactory
 
 
 class StoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        layoutInflater.factory2 = LayoutInflaterFactory(delegate).addOnViewCreatedListener(WindowInsetsHelper.LISTENER)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_store)
         //找组件
         val title = findViewById<TextView>(R.id.storeTitle)
         val copyFrom = findViewById<TextView>(R.id.storeFrom)
-        val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            toolbar.inflateMenu(R.menu.store_toolbar_menu)
-            toolbar.setOnMenuItemClickListener {
-                val intent = Intent(this,DownloadActivity::class.java)
-                startActivity(intent)
-                return@setOnMenuItemClickListener true
-            }
+        val downloadManager = findViewById<ExtendedFloatingActionButton>(R.id.storeDownloadManager)
+        downloadManager.setOnClickListener {
+            val intent = Intent(this,DownloadActivity::class.java)
+            startActivity(intent)
         }
         //读参数
         val name = intent.getStringExtra("name")
@@ -41,7 +39,7 @@ class StoreActivity : AppCompatActivity() {
         copyFrom.text = copyFromText
         //通过from判断解析方法吧，找不到对应from就返回不支持
         if (name != null && from != null && path != null) {//虽然做了防毒，但不这样写不能编译
-            if (from.contains("没空云")){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
+            if (from.contains("没空云")){ apiDecodeBzyunCn(this,path,name) }//匹配规则，没空云（OneIndexApi）
             else if (from.contains("Joyin的jar游戏下载站")){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
             else if (from.contains("e简网")){ apiDecodeEjJava(this,path) }
             else if (from.contains("小众网")){ apiDecodeIniche(this,path) }

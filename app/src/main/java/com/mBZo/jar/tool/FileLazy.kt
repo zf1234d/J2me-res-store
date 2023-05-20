@@ -2,7 +2,7 @@ package com.mBZo.jar.tool
 
 import java.io.File
 
-class FileLazy(private val path: String){
+class FileLazy(path: String){
     init {
         //自动创建
         if (File(path.substringBeforeLast("/")).exists().not()){
@@ -22,6 +22,9 @@ class FileLazy(private val path: String){
     }
     fun writeAddonStart(content: String){
         file.writeText("${content}${file.readText()}")
+    }
+    fun writeReplace(oldValue: String,newValue: String){
+        file.writeText(file.readText().replace(oldValue,newValue))
     }
     fun writeRemove(content: String){
         file.writeText(file.readText().replace(content,""))

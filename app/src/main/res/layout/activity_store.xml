@@ -1,59 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    app:edgeToEdge="true"
     android:orientation="vertical">
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:contentScrim="?android:attr/colorBackground"
-            app:titleCollapseMode="scale"
-            app:layout_scrollFlags="scroll|enterAlwaysCollapsed|exitUntilCollapsed">
-
-            <com.google.android.material.appbar.MaterialToolbar
-                app:layout_collapseMode="pin"
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"/>
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+        app:fitsSystemWindowsInsets="top">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
             android:orientation="vertical">
-            <com.google.android.material.card.MaterialCardView
-                app:cardElevation="4dp"
-                app:strokeWidth="0dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:layout_collapseMode="pin"
-                android:id="@+id/icoRule"
-                android:visibility="gone"
+            <ImageView
+                android:id="@+id/ico"
                 android:layout_gravity="center"
-                android:layout_margin="8dp"
+                android:scaleType="fitXY"
+                android:adjustViewBounds="true"
                 android:layout_width="64dp"
-                android:layout_height="64dp">
-                <ImageView
-                    android:id="@+id/ico"
-                    android:layout_gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@string/icon" />
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/icon" />
             <TextView
                 android:id="@+id/storeTitle"
                 android:padding="8dp"
@@ -76,7 +46,6 @@
             <com.google.android.material.button.MaterialButton
                 android:visibility="gone"
                 android:id="@+id/storeDownload"
-                android:padding="0dp"
                 android:layout_margin="24dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
@@ -86,7 +55,7 @@
                 android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="240dp"
-                android:layout_margin="24dp"
+                android:layout_marginHorizontal="23dp"
                 android:scrollbarSize="2dp"
                 android:scrollbars="horizontal" />
             <TextView
@@ -96,14 +65,26 @@
                 android:layout_margin="24dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
-            <ProgressBar
-                android:id="@+id/storeLoadingMain"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:indeterminate="true"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <ProgressBar
+        app:layout_fitsSystemWindowsInsets="top"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/storeLoadingMain"
+        android:indeterminate="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
+        app:icon="@drawable/ic_baseline_get_app_24"
+        app:layout_fitsSystemWindowsInsets="bottom"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="16dp"
+        android:id="@+id/storeDownloadManager"
+        android:text="@string/downloadManager"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

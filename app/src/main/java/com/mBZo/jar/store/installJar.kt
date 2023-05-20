@@ -11,7 +11,6 @@ import com.mBZo.jar.BuildConfig
 import com.mBZo.jar.tool.isDestroy
 import java.io.File
 
-@SuppressLint("QueryPermissionsNeeded")
 fun installJar(activity: Activity, file: File) {
     try {
         val mIntent = Intent(Intent.ACTION_VIEW)

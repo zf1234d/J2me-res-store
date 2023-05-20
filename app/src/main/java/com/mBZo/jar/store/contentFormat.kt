@@ -13,7 +13,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.R
 import com.mBZo.jar.adapter.ImgShowRecyclerAdapter
@@ -22,14 +21,11 @@ import com.mBZo.jar.tool.imageLoad
 fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<String>?=null, linkList: List<String>?=null, linkNameList: List<String>?=null, fileSizeList: List<String>?=null, about: String?=null, loading: Boolean) {//最后一个为true时停止加载
     activity.runOnUiThread {
         val info = activity.findViewById<TextView>(R.id.storeInfo)
-        val iconRule = activity.findViewById<MaterialCardView>(R.id.icoRule)
         val icon = activity.findViewById<ImageView>(R.id.ico)
         val loadingProgressBar = activity.findViewById<ProgressBar>(R.id.storeLoadingMain)
         val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
         val downloadButton: MaterialButton = activity.findViewById(R.id.storeDownload)
-        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences",
-            Context.MODE_PRIVATE
-        )
+        val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
         val downloader = spfRecord.getBoolean("smartDownloader",true)
         //简介
         if (about != null){
@@ -44,8 +40,8 @@ fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<St
         }
         //图标
         if (iconLink != null){
-            iconRule.visibility = View.VISIBLE
-            imageLoad(icon,iconLink)
+            icon.visibility = View.VISIBLE
+            imageLoad(activity,icon,iconLink)
         }
         //预览图
         if (imageList != null) {
@@ -54,7 +50,7 @@ fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<St
                 //设置recyclerView
                 val layoutManager = LinearLayoutManager(activity, RecyclerView.HORIZONTAL,false)
                 recyclerView.layoutManager = layoutManager
-                val adapter = ImgShowRecyclerAdapter(imageList)
+                val adapter = ImgShowRecyclerAdapter(activity,imageList)
                 recyclerView.adapter = adapter
             }
         }
@@ -82,7 +78,7 @@ fun contentFormat(activity: Activity, iconLink: String?=null, imageList: List<St
                                     WebViewListen2Download(activity,linkList[p])
                                 }
                                 else{
-                                    if (fileSizeList != null && fileSizeList.isNotEmpty()){
+                                    if (!fileSizeList.isNullOrEmpty()){
                                         MaterialAlertDialogBuilder(activity)
                                             .setTitle("详情")
                                             .setMessage("\n${linkNameList[p]}\n大小：${fileSizeList[p]}")
