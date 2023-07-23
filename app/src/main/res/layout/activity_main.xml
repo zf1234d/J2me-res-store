@@ -13,13 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:ignore="PrivateResource" />
-    <ProgressBar
-        app:fitsSystemWindowsInsets="top"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:id="@+id/progressBar2"
-        android:indeterminate="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
     <com.google.android.material.bottomnavigation.BottomNavigationView
         app:fitsSystemWindowsInsets="bottom"
         android:layout_alignParentBottom="true"

@@ -2,19 +2,12 @@ package com.mBZo.jar
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.mBZo.jar.tool.FileLazy
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.internal.http.RequestLine
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.lang.Exception
 
 class SettingsFragment : PreferenceFragmentCompat() {
 

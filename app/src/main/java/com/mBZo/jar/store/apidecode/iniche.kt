@@ -2,7 +2,7 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
-import com.mBZo.jar.store.contentFormat
+import com.mBZo.jar.store.storeManage
 import com.mBZo.jar.tool.isDestroy
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -45,7 +45,7 @@ fun apiDecodeIniche(activity: StoreActivity, path: String) {
             //下载
             val link = List(1) {path}
             val linkName = List(1) {"你知道的，这是什么并不重要"}
-            contentFormat(activity,null,imageList,link,linkName,null,gameInfo,false)
+            storeManage(activity,null,imageList,link,linkName,null,gameInfo,false)
         } catch (e: Exception) {
             if (isDestroy(activity).not()){
                 activity.runOnUiThread {

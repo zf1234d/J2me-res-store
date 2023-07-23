@@ -4,7 +4,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
-import com.mBZo.jar.store.contentFormat
+import com.mBZo.jar.store.storeManage
 import com.mBZo.jar.tool.isDestroy
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -47,10 +47,10 @@ fun apiDecode52emu(activity: StoreActivity, path: String) {
             }
             activity.runOnUiThread {
                 if (downLinkList.size == 0){
-                    contentFormat(activity,null,imagesList,about = info, loading = false)
+                    storeManage(activity,null,imagesList,about = info, loading = false)
                 }
                 else{
-                    contentFormat(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)
+                    storeManage(activity,null,imagesList,downLinkList,downLinkNameList,null,info,false)
                 }
             }
         }catch (e: Exception) {

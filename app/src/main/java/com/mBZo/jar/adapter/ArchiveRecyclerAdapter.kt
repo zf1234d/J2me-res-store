@@ -10,9 +10,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
+import com.mBZo.jar.tool.ArchiveItem
 
-class ArchiveRecyclerAdapter(private val activity: Activity?, private val list: MutableList<Array<String>>) :
+class ArchiveRecyclerAdapter(private val activity: Activity?, private val list: ArrayList<ArchiveItem>) :
     RecyclerView.Adapter<ArchiveRecyclerAdapter.MyViewHolder>() {
+    fun getList(): ArrayList<ArchiveItem> {
+        return list
+    }
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -26,17 +31,17 @@ class ArchiveRecyclerAdapter(private val activity: Activity?, private val list: 
     override fun getItemCount(): Int = list.size
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val itemName = list[position][0]
-        val itemFrom = list[position][2]
+        val itemName = list[position].name
+        val itemFrom = list[position].from
         //显示
         holder.name.text = itemName
         holder.from.text = itemFrom
         //点击
         holder.itemView.setOnClickListener {
             val intent = Intent(holder.itemView.context, StoreActivity::class.java)
-            intent.putExtra("name",list[position][0])
-            intent.putExtra("from",list[position][2])
-            intent.putExtra("path",list[position][3])
+            intent.putExtra("name",list[position].name)
+            intent.putExtra("from",list[position].from)
+            intent.putExtra("path",list[position].path)
             activity?.startActivity(intent)
         }
     }

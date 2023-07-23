@@ -2,10 +2,10 @@ package com.mBZo.jar.store.apidecode
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.StoreActivity
-import com.mBZo.jar.otherOpen
 import com.mBZo.jar.store.WebViewListen2Download
-import com.mBZo.jar.store.contentFormat
+import com.mBZo.jar.store.storeManage
 import com.mBZo.jar.tool.isDestroy
+import com.mBZo.jar.tool.otherOpen
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -77,11 +77,11 @@ fun lanzouApi(activity: StoreActivity,type: String,url: String,pwd: String) {
                     //作为唯一信息来源
                     val linkNameList = listOf(about)
                     val linkList = listOf(finLink)
-                    contentFormat(activity,null,null,linkList,linkNameList,null,about,false)
+                    storeManage(activity,null,null,linkList,linkNameList,null,about,false)
                 }
                 else if (type == "web2download"){
                     //传回web2download
-                    contentFormat(activity, loading = false)
+                    storeManage(activity, loading = false)
                     WebViewListen2Download(activity,finLink)
                 }
             }

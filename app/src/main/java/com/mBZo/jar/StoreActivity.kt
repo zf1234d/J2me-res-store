@@ -1,17 +1,16 @@
 package com.mBZo.jar
 
-import android.app.Activity
-import android.content.*
-import android.net.Uri
+import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.startActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import com.mBZo.jar.store.apidecode.*
-import com.mBZo.jar.tool.isDestroy
+import com.mBZo.jar.store.apidecode.apiDecode52emu
+import com.mBZo.jar.store.apidecode.apiDecodeBzyun
+import com.mBZo.jar.store.apidecode.apiDecodeEjJava
+import com.mBZo.jar.store.apidecode.apiDecodeIniche
+import com.mBZo.jar.store.apidecode.apiDecodeJoyin
 import rikka.insets.WindowInsetsHelper
 import rikka.layoutinflater.view.LayoutInflaterFactory
 
@@ -39,7 +38,7 @@ class StoreActivity : AppCompatActivity() {
         copyFrom.text = copyFromText
         //通过from判断解析方法吧，找不到对应from就返回不支持
         if (name != null && from != null && path != null) {//虽然做了防毒，但不这样写不能编译
-            if (from.contains("没空云")){ apiDecodeBzyunCn(this,path,name) }//匹配规则，没空云（OneIndexApi）
+            if (from.contains("没空云")){ apiDecodeBzyun(this,path,name) }//匹配规则，没空云（OneIndexApi）
             else if (from.contains("Joyin的jar游戏下载站")){ apiDecodeJoyin(this,path) }//匹配规则，Joyin (Lanzou)
             else if (from.contains("e简网")){ apiDecodeEjJava(this,path) }
             else if (from.contains("小众网")){ apiDecodeIniche(this,path) }
@@ -62,7 +61,7 @@ class StoreActivity : AppCompatActivity() {
         else{//如果说，真的有毒的话，给一个提示
             MaterialAlertDialogBuilder(this)
                 .setCancelable(false)
-                .setMessage("您触发了意料之外的情况，无法提供内容")
+                .setMessage("触发了意料之外的情况，无法提供内容")
                 .setPositiveButton("退出"){ _,_ -> this.finish() }
                 .show()
         }
@@ -71,19 +70,5 @@ class StoreActivity : AppCompatActivity() {
 }
 
 
-//跳转浏览器
-fun otherOpen(activity: Activity,url:String) {
-    try {
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.data = Uri.parse(url)
-        startActivity(activity,intent,null)
-    } catch (e: Exception) {
-        if (isDestroy(activity).not()){
-            activity.runOnUiThread {
-                Toast.makeText(activity,"未找到浏览器", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-}
 
 

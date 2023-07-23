@@ -16,16 +16,11 @@ import com.google.android.material.chip.Chip
 import com.mBZo.jar.BuildConfig
 import com.mBZo.jar.DownloadActivity
 import com.mBZo.jar.R
-import com.mBZo.jar.store.installJar
+import com.mBZo.jar.tool.DownloadProgressListener
+import com.mBZo.jar.tool.downloadFile
+import com.mBZo.jar.tool.formatSize
+import com.mBZo.jar.tool.installJar
 import com.mBZo.jar.tool.isDestroy
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import zlc.season.downloadx.State
-import zlc.season.downloadx.core.DownloadTask
-import zlc.season.downloadx.download
-import zlc.season.downloadx.utils.formatSize
 import java.io.File
 import java.util.*
 
@@ -37,86 +32,86 @@ class DownloadRecyclerAdapter(
     RecyclerView.Adapter<DownloadRecyclerAdapter.ViewHolder>() {
     override fun getItemCount(): Int = fileList.size
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.itemView.setOnClickListener {  }
         //文件名
-        holder.taskName.text = fileList[position].name
+        holder.taskName.text = fileList[holder.adapterPosition].name
         //判断是否已下载
-        val downloadedFilePath = activity.filesDir.absolutePath+"/Download/"+fileList[position].name
+        val downloadedFilePath = activity.filesDir.absolutePath+"/Download/"+fileList[holder.adapterPosition].name
+        if (File(downloadedFilePath.substringBeforeLast("/")).exists().not()){
+            File(downloadedFilePath.substringBeforeLast("/")).mkdirs()
+        }
         if (File(downloadedFilePath).exists()){
-            viewSucceed(holder,position)
+            viewSucceed(holder,holder.adapterPosition)
         }
         else{
             //下载监听
-            val downloadTask = GlobalScope.download(fileList[position].readText(),fileList[position].name,activity.filesDir.absolutePath+"/Download/")
-            downloadTask.state()
-                .onEach {
-                    if (downloadTask.isSucceed()){
-                        viewSucceed(holder,position)
+            Thread{
+                downloadFile(fileList[position].readText(),activity.filesDir.absolutePath+"/Download/"+fileList[holder.adapterPosition].name,object :DownloadProgressListener{
+                    override fun onProgress(totalBytes: Long, downloadedBytes: Long) {
+                        viewInDownloading(holder,holder.adapterPosition,downloadedBytes,totalBytes)
                     }
-                    else if (downloadTask.isStarted()){
-                        if (it.progress.totalSize!=(0).toLong()){
-                            viewInDownloading(downloadTask,holder,position,it)
-                        }
+                    override fun onSucceed() {
+                        viewSucceed(holder,holder.adapterPosition)
                     }
-                    else{
-                        viewFailed(downloadTask,holder,position)
-                    }
-                }.launchIn(GlobalScope)
-            downloadTask.start()
+                })
+            }.start()
         }
 
         //onBindViewHolder
     }
 
-    private fun viewFailed(downloadTask: DownloadTask, holder: ViewHolder, position: Int) {
-        activity.runOnUiThread {
-            holder.chipOpen.text = "重试"
-            holder.chipDel.text = "删除"
-            holder.chipOpen.setOnClickListener {
-                downloadTask.start()
-            }
-            holder.chipDel.setOnClickListener {
-                notifyItemRemoved(position)
-                if (fileList[position].exists()){
-                    fileList[position].delete()
-                }
-                fileList.remove(fileList[position])
-                downloadTask.remove()
-                notifyItemRangeChanged(position,itemCount)
-            }
-            holder.loading.visibility = View.GONE
-            holder.chipOpen.visibility = View.VISIBLE
-            holder.chipShare.visibility = View.GONE
-            holder.chipDel.visibility = View.VISIBLE
-        }
-    }
+//    private fun viewFailed(downloadTask: DownloadTask, holder: ViewHolder, position: Int) {
+//        activity.runOnUiThread {
+//            holder.chipOpen.text = "重试"
+//            holder.chipDel.text = "删除"
+//            holder.chipOpen.setOnClickListener {
+//                downloadTask.start()
+//            }
+//            holder.chipDel.setOnClickListener {
+//                notifyItemRemoved(position)
+//                if (fileList[position].exists()){
+//                    fileList[position].delete()
+//                }
+//                fileList.remove(fileList[position])
+//                downloadTask.remove()
+//                notifyItemRangeChanged(position,itemCount)
+//            }
+//            holder.loading.visibility = View.GONE
+//            holder.chipOpen.visibility = View.VISIBLE
+//            holder.chipShare.visibility = View.GONE
+//            holder.chipDel.visibility = View.VISIBLE
+//        }
+//    }
 
     private fun viewInDownloading(
-        downloadTask: DownloadTask,
         holder: ViewHolder,
         position: Int,
-        state: State
+        downloadedBytes: Long,
+        totalBytes: Long
     ) {
         activity.runOnUiThread {
-            holder.chipOpen.text = "取消"
-            holder.chipOpen.setOnClickListener {
-                notifyItemRemoved(position)
-                if (fileList[position].exists()){
-                    fileList[position].delete()
-                }
-                fileList.remove(fileList[position])
-                downloadTask.remove()
-                notifyItemRangeChanged(position,itemCount)
-            }
+            holder.chipOpen.visibility = View.GONE
+//            holder.chipOpen.text = "取消"
+//            holder.chipOpen.setOnClickListener {
+//                notifyItemRemoved(position)
+//                if (fileList[position].exists()){
+//                    fileList[position].delete()
+//                }
+//                fileList.remove(fileList[position])
+//                downloadTask.remove()
+//                notifyItemRangeChanged(position,itemCount)
+//            }
             @SuppressLint("SetTextI18n")
-            holder.chipShare.text = "${state.progress.downloadSizeStr()}/${state.progress.totalSizeStr()}"
+            holder.chipShare.text = "${downloadedBytes.formatSize()}/${totalBytes.formatSize()}"
             holder.chipShare.setOnClickListener {  }
-            holder.chipDel.text = state.progress.percentStr()
+
+            val progress = (downloadedBytes.toDouble() / totalBytes.toDouble() * 100).toInt()
+            val progressStr = "$progress%"
+            holder.chipDel.text = progressStr
             holder.chipDel.setOnClickListener {  }
             holder.loading.isIndeterminate = false
-            holder.loading.progress = state.progress.percent().toInt()
+            holder.loading.progress = progress
             holder.chipOpen.visibility = View.VISIBLE
             holder.chipShare.visibility = View.VISIBLE
             holder.chipDel.visibility = View.VISIBLE

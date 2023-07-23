@@ -6,14 +6,14 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.mBZo.jar"
         minSdk 21
-        targetSdk 33
-        versionCode 87
-        versionName '3.7.1'
+        targetSdk 34
+        versionCode 88
+        versionName '3.7.2'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def df = new SimpleDateFormat("MMdd")
         setProperty("archivesBaseName", "J2meStore_${df.format(new Date())}_v${versionName}")
@@ -24,6 +24,8 @@ android {
             applicationIdSuffix ".test"
         }
         release {
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -34,19 +36,22 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    viewBinding{
+        enabled = true
+    }
+
 
     kotlinOptions {
         jvmTarget = '1.8'
     }
 
-    buildToolsVersion '34.0.0 rc3'
     namespace 'com.mBZo.jar'
 }
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.9.0'
 
-    def appCenterSdkVersion = '5.0.1'
+    def appCenterSdkVersion = '5.0.2'
     implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
     implementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
 
@@ -55,9 +60,8 @@ dependencies {
     implementation "dev.rikka.rikkax.layoutinflater:layoutinflater:1.3.0"
     implementation 'com.github.stfalcon-studio:StfalconImageViewer:v1.0.1'
     implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.11'
-    implementation 'io.coil-kt:coil-gif:2.2.2'
-    implementation 'io.coil-kt:coil:2.3.0'
-    implementation "com.github.ssseasonnn:DownloadX:1.0.5"
+    implementation 'io.coil-kt:coil-gif:2.4.0'
+    implementation 'io.coil-kt:coil:2.4.0'
     implementation 'net.lingala.zip4j:zip4j:2.11.5'
 
 
