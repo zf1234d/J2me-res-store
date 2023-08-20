@@ -4,11 +4,11 @@
 ## 近期计划
 * 维护仓库源
 ## 远期计划
-* ~~继续向下兼容更低安卓版本~~（过于困难）
+* ~~继续向下兼容更低安卓版本~~（过于困难，搁置中）
 * 软件评论区
 
 
 ## 捐赠
-* 请备注为对j2me应用商店的捐赠，否则可能无法统计到位
+* 请备注为对j2me应用商店的捐赠以便统计
 <img src="https://alist.bzyun.top/d/%E5%88%86%E4%BA%AB/%E6%94%B6%E6%AC%BE%E7%A0%81/Wechat.png" width="400" alt="微信">
 <img src="https://alist.bzyun.top/d/%E5%88%86%E4%BA%AB/%E6%94%B6%E6%AC%BE%E7%A0%81/Alipay.webp" width="400" alt="支付宝">

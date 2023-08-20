@@ -12,8 +12,8 @@ android {
         applicationId "com.mBZo.jar"
         minSdk 21
         targetSdk 34
-        versionCode 88
-        versionName '3.7.2'
+        versionCode 92
+        versionName '3.7.6'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def df = new SimpleDateFormat("MMdd")
         setProperty("archivesBaseName", "J2meStore_${df.format(new Date())}_v${versionName}")
@@ -49,7 +49,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
 
     def appCenterSdkVersion = '5.0.2'
     implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
@@ -63,14 +63,14 @@ dependencies {
     implementation 'io.coil-kt:coil-gif:2.4.0'
     implementation 'io.coil-kt:coil:2.4.0'
     implementation 'net.lingala.zip4j:zip4j:2.11.5'
+    implementation 'com.github.john990:WaveView:v0.9'
 
 
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0-beta01'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.preference:preference-ktx:1.2.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

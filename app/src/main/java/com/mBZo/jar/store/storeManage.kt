@@ -26,7 +26,7 @@ fun storeManage(activity: Activity, iconLink: String?=null, imageList: List<Stri
     val recyclerView: RecyclerView = activity.findViewById(R.id.storeImages)
     val downloadButton: MaterialButton = activity.findViewById(R.id.storeDownload)
     val sp: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
-    val smartDownloader = sp.getBoolean("smartDownloader",true)
+    val smartDownloader = sp.getBoolean("smartDownloader",false)
     activity.runOnUiThread {
         //简介
         if (about != null){

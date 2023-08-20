@@ -2,10 +2,8 @@ package com.mBZo.jar
 
 import android.app.Activity
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -14,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import coil.load
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -23,6 +20,8 @@ import com.mBZo.jar.databinding.FragmentHomeBinding
 import com.mBZo.jar.tool.FileLazy
 import com.mBZo.jar.tool.GetArchive
 import com.mBZo.jar.tool.imageLoad
+import com.mBZo.jar.tool.isPlay
+import com.mBZo.jar.tool.otherOpen
 import com.microsoft.appcenter.AppCenter
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -61,7 +60,7 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        _binding = FragmentHomeBinding.inflate(inflater, container, false);
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
     override fun onDestroyView() {
@@ -72,20 +71,15 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val sp: SharedPreferences = activity.getSharedPreferences("${activity.packageName}_preferences",
-            AppCompatActivity.MODE_PRIVATE
-        )
         val pathArchiveVer = "${view.context.filesDir.absolutePath}/mBZo/java/list/0.list"
-        val archive =
-            { childFragmentManager.findFragmentById(R.id.fragment_archive) as ArchiveFragment? }
-//        val pathArchiveContent = "${view.context.filesDir.absolutePath}/mBZo/java/list/1.list"
         //设置顶栏菜单
         binding.toolbar.inflateMenu(R.menu.home_toolbar_menu)
         binding.toolbar.setOnMenuItemClickListener {
             when(it.itemId){
                 //下载管理
                 R.id.toolbar_download -> {
-                    val intent = Intent(view.context,DownloadActivity::class.java)
+                    val intent = Intent()
+                    intent.setClass(view.context,DownloadActivity::class.java)
                     startActivity(intent)
                 }
                 //捐赠页
@@ -221,19 +215,10 @@ class HomeFragment : Fragment() {
         binding.versionCard.setOnClickListener {
             when (binding.versionType.text) {
                 getString(R.string.findNewArchive),getString(R.string.findNewArchiveUnexpectedStop) -> {
-                    GetArchive(activity,archive(),this).start()
+                    GetArchive(activity,this).start()
                 }
                 getString(R.string.findNewApp) -> {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                        intent.data = Uri.parse(otaUrl.invoke())
-                        startActivity(intent,null)
-                    } catch (e: Exception) {
-                        activity.runOnUiThread {
-                            Toast.makeText(view.context,getString(R.string.notFindBrowser), Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    otherOpen(activity, otaUrl())
                 }
                 getString(R.string.allReady) -> {
                     val archiveFile = File("${view.context.filesDir.absolutePath}/mBZo/java/list/0.list")
@@ -245,7 +230,7 @@ class HomeFragment : Fragment() {
                     }
                     MaterialAlertDialogBuilder(view.context)
                         .setMessage("版本\n${BuildConfig.VERSION_CODE} (云端${appCVer.invoke()})\n\n库存\n${archiveVer}\n\n通道\n${if(isPlay==true) "play" else if(isPlay==false) BuildConfig.BUILD_TYPE else "checking..."}\n\n系统\n${Build.VERSION.RELEASE}(${Build.VERSION.SDK_INT})\n\n目标\n${view.context.applicationInfo.targetSdkVersion}")
-                        .setPositiveButton("更改库存"){_,_ -> GetArchive(activity,archive(),this).start()}
+                        .setPositiveButton("更改库存"){_,_ -> GetArchive(activity,this).start()}
                         .show()
                 }
                 else -> { }
@@ -257,7 +242,6 @@ class HomeFragment : Fragment() {
             getRemoteConfig(object :RemoteConfigListener{
                 override fun onSucceed() {
                     activity.runOnUiThread {
-                        //路径
                         //公告
                         binding.noticeCard.visibility = View.VISIBLE
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -268,7 +252,6 @@ class HomeFragment : Fragment() {
                         }
                         binding.noticeContent.movementMethod = LinkMovementMethod.getInstance()
                         //更新控制器
-                        val startPage = sp.getString("startPage","home")
                         if (BuildConfig.VERSION_CODE >= appCVer.invoke()) {
                             if (!File(pathArchiveVer).exists()){
                                 FileLazy(pathArchiveVer).writeNew("000000")
@@ -278,13 +261,8 @@ class HomeFragment : Fragment() {
                                 binding.versionType.text = activity.getString(R.string.allReady)
                                 imageLoad(activity,binding.versionImg, R.drawable.ic_baseline_check_24)
                                 binding.progressBar.visibility = View.GONE
-                                archive()?.loadArchive()
                             }
                             else{
-                                if (startPage=="search") {
-//                                    viewpager.setCurrentItem(1, false)
-//                                    nav.menu.getItem(1).isChecked = true
-                                }
                                 if (localAuth == "process") {
                                     binding.versionType.text = getString(R.string.findNewArchiveUnexpectedStop)
                                 }
@@ -297,28 +275,16 @@ class HomeFragment : Fragment() {
                         }
                         else{
                             when (isPlay) {
-                                true -> {
+                                false -> {
+                                    binding.versionType.text = resources.getString(R.string.findNewApp)
+                                    imageLoad(activity,binding.versionImg, R.drawable.ic_baseline_update_24)
+                                    binding.versionType.visibility = View.GONE
+                                }
+                                else -> {
                                     //play商店，不提示更新
                                     binding.versionType.text = activity.getString(R.string.allReady)
                                     imageLoad(activity,binding.versionImg, R.drawable.ic_baseline_check_24)
                                     binding.progressBar.visibility = View.GONE
-                                    archive()?.loadArchive()
-                                }
-                                null -> {
-                                    binding.versionType.text = activity.getString(R.string.allReady)
-                                    imageLoad(activity,binding.versionImg, R.drawable.ic_baseline_check_24)
-                                    binding.progressBar.visibility = View.GONE
-                                    archive()?.loadArchive()
-                                }
-                                else -> {
-                                    //正常分发，需要提示更新
-                                    if (startPage=="search"){
-//                                        nav.menu.getItem(1).isChecked = true
-                                    }
-                                    binding.versionType.text = resources.getString(R.string.findNewApp)
-                                    imageLoad(activity,binding.versionImg, R.drawable.ic_baseline_update_24)
-                                    binding.versionType.visibility = View.GONE
-                                    archive()?.loadArchive()
                                 }
                             }
                         }
@@ -330,6 +296,15 @@ class HomeFragment : Fragment() {
 
 
 
+    }
+
+    fun setWave(show: Boolean){
+        if (show){
+            binding.waveView.visibility = View.VISIBLE
+        }
+        else{
+            binding.waveView.visibility = View.INVISIBLE
+        }
     }
 
     fun setLoading(show: Boolean){
@@ -368,7 +343,9 @@ class HomeFragment : Fragment() {
             onlineInfo = data
             listener.onSucceed()
         } catch (_: Exception){
-            getRemoteConfig(listener)
+            Thread{
+                getRemoteConfig(listener)
+            }.start()
         }
     }
 

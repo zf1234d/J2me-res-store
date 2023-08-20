@@ -3,7 +3,6 @@ package com.mBZo.jar
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -12,6 +11,7 @@ import com.mBZo.jar.adapter.ArchiveRecyclerAdapter
 import com.mBZo.jar.databinding.FragmentArchiveBinding
 import com.mBZo.jar.tool.ArchiveItem
 import com.mBZo.jar.tool.FileLazy
+import com.mBZo.jar.tool.askReloadArchive
 import java.io.File
 
 // TODO: Rename parameter arguments, choose names that match
@@ -55,13 +55,27 @@ class ArchiveFragment : Fragment() {
     }
 
 
+    private val gameList = arrayListOf<ArchiveItem>()
+    override fun onResume() {
+        super.onResume()
+        if (askReloadArchive){
+            val searchView: SearchView = binding.archiveToolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
+            askReloadArchive = false
+            loadArchive()
+            searchView.setQuery("",false)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val searchView: SearchView = binding.archiveToolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
+        searchView.clearFocus()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.archiveToolbar.inflateMenu(R.menu.archive_toolbar_menu)
         val searchView: SearchView = binding.archiveToolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
-        //加载库存
-        loadArchive()
-        val gameList = (binding.recyclerArchive.adapter as ArchiveRecyclerAdapter).getList()
         //搜索功能
         val filterList = arrayListOf<ArchiveItem>()
         searchView.setOnQueryTextListener(object :SearchView.OnQueryTextListener{
@@ -95,7 +109,7 @@ class ArchiveFragment : Fragment() {
         })
     }
 
-    fun loadArchive(){
+    private fun loadArchive(){
         try {
             val list = arrayListOf<ArchiveItem>()
             if (File("${activity.filesDir.absolutePath}/mBZo/java/list/1.list").exists().not()){
@@ -117,11 +131,13 @@ class ArchiveFragment : Fragment() {
                     list.add(ArchiveItem(name,nameFC,from,str.substringAfter("\"url\":\"").substringBefore("\"")))
                 }
             }
+            gameList.clear()
+            gameList.addAll(list)
             binding.recyclerArchive.layoutManager = LinearLayoutManager(activity)
             binding.recyclerArchive.adapter = ArchiveRecyclerAdapter(activity, list)
             val searchView = binding.archiveToolbar.menu.findItem(R.id.toolbar_search).actionView as SearchView
             searchView.queryHint = "在${list.size}个项目中搜索"
-        }catch (e:Exception){}
+        }catch (_:Exception){}
     }
 
 

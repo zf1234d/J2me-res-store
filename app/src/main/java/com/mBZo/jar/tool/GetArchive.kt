@@ -3,7 +3,6 @@ package com.mBZo.jar.tool
 import android.app.Activity
 import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.mBZo.jar.ArchiveFragment
 import com.mBZo.jar.HomeFragment
 import com.mBZo.jar.R
 import com.mBZo.jar.archiveCVer
@@ -19,7 +18,6 @@ import java.nio.charset.StandardCharsets
 
 class GetArchive(
     private val activity: Activity?,
-    private val archive: ArchiveFragment?,
     private val home: HomeFragment
 ){
     fun start() {
@@ -83,6 +81,7 @@ class GetArchive(
 
     private fun startDownloadArchive(activity: Activity, list: List<String>) {
         home.setLoading(true)
+        home.setWave(true)
         home.setType(
             activity.getString(R.string.updateNewArchive),
             ContextCompat.getDrawable(activity,R.drawable.ic_baseline_query_builder_24)
@@ -133,12 +132,13 @@ class GetArchive(
                 .writeNew(archiveCVer.invoke())
             activity.runOnUiThread {
                 home.setLoading(false)
+                home.setWave(false)
                 home.setType(
                     activity.getString(R.string.allReady),
                     ContextCompat.getDrawable(activity,R.drawable.ic_baseline_check_24)
                 )
             }
-            archive?.loadArchive()
+            askReloadArchive = true
         }.start()
     }
 
@@ -153,7 +153,9 @@ class GetArchive(
             val data = response.body.string()
             listener.onSucceed(data)
         } catch (e: Exception) {
-            getArchiveDetail(listener)
+            Thread{
+                getArchiveDetail(listener)
+            }.start()
         }
     }
 }

@@ -9,6 +9,11 @@
             app:summaryOff="左右滑动启用中"
             app:summaryOn="左右滑动被禁用"
             app:title="禁用左右滑动" />
+        <SwitchPreferenceCompat
+            app:icon="@drawable/baseline_palette_24"
+            app:key="dynamicTheme"
+            app:summary="从壁纸中获取主题色"
+            app:title="动态主题" />
         <ListPreference
             app:icon="@drawable/ic_baseline_login_24"
             app:defaultValue="home"
@@ -24,17 +29,9 @@
         <SwitchPreferenceCompat
             app:icon="@drawable/ic_baseline_get_app_24"
             app:key="smartDownloader"
-            app:defaultValue="true"
+            app:defaultValue="false"
             app:summary="接管下载jar文件并打开"
             app:title="内置下载器" />
-        <SwitchPreferenceCompat
-            app:title="自动安装"
-            app:key="downloadAutoInstall"
-            app:summary="下载完成后,自动安装"
-            app:defaultValue="true"
-            app:dependency="smartDownloader"
-            app:isPreferenceVisible="false"
-            app:icon="@drawable/ic_baseline_open_in_new_24"/>
         <Preference
             app:title="@string/downloadManager"
             app:dependency="smartDownloader"

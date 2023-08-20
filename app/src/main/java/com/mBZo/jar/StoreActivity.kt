@@ -1,7 +1,10 @@
 package com.mBZo.jar
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -11,6 +14,7 @@ import com.mBZo.jar.store.apidecode.apiDecodeBzyun
 import com.mBZo.jar.store.apidecode.apiDecodeEjJava
 import com.mBZo.jar.store.apidecode.apiDecodeIniche
 import com.mBZo.jar.store.apidecode.apiDecodeJoyin
+import com.mBZo.jar.tool.attachDynamicColor
 import rikka.insets.WindowInsetsHelper
 import rikka.layoutinflater.view.LayoutInflaterFactory
 
@@ -19,14 +23,23 @@ class StoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LayoutInflaterFactory(delegate).addOnViewCreatedListener(WindowInsetsHelper.LISTENER)
         super.onCreate(savedInstanceState)
+        attachDynamicColor()
         setContentView(R.layout.activity_store)
         //找组件
         val title = findViewById<TextView>(R.id.storeTitle)
         val copyFrom = findViewById<TextView>(R.id.storeFrom)
+        val sp: SharedPreferences = getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
+        val smartDownloader = sp.getBoolean("smartDownloader",false)
         val downloadManager = findViewById<ExtendedFloatingActionButton>(R.id.storeDownloadManager)
-        downloadManager.setOnClickListener {
-            val intent = Intent(this,DownloadActivity::class.java)
-            startActivity(intent)
+        if (smartDownloader){
+            downloadManager.setOnClickListener {
+                val intent = Intent()
+                intent.setClass(this,DownloadActivity::class.java)
+                startActivity(intent)
+            }
+        }
+        else{
+            downloadManager.visibility = View.GONE
         }
         //读参数
         val name = intent.getStringExtra("name")

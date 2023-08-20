@@ -2,12 +2,18 @@ package com.mBZo.jar.tool
 
 import android.app.Activity
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import coil.load
+import com.google.android.material.color.DynamicColors
 import com.mBZo.jar.BuildConfig
+import com.mBZo.jar.R
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -22,8 +28,26 @@ import java.io.FileOutputStream
 import kotlin.math.log10
 import kotlin.math.pow
 
-//跳转浏览器
-fun otherOpen(activity: Activity, url:String) {
+fun Activity.attachDynamicColor(){
+    val sp: SharedPreferences = getSharedPreferences("${packageName}_preferences",
+        AppCompatActivity.MODE_PRIVATE
+    )
+    val dynamicColors = sp.getBoolean("dynamicTheme",false)
+    if (DynamicColors.isDynamicColorAvailable() && dynamicColors){
+        DynamicColors.applyToActivityIfAvailable(this)
+    }
+}
+fun isDestroy(mActivity: Activity?): Boolean {
+    return mActivity == null || mActivity.isFinishing || mActivity.isDestroyed
+}
+
+fun imageLoad(activity: Activity, view: ImageView?, img: Any){
+    if (isDestroy(activity).not()){
+        view?.load(img)
+    }
+}
+
+fun otherOpen(activity: Activity, url:String) {//跳转浏览器
     try {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(url)
@@ -31,7 +55,7 @@ fun otherOpen(activity: Activity, url:String) {
     } catch (e: Exception) {
         if (isDestroy(activity).not()){
             activity.runOnUiThread {
-                Toast.makeText(activity,"未找到浏览器", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity,activity.getString(R.string.notFindBrowser), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -43,6 +67,7 @@ fun installJar(activity: Activity, file: File) {
         mIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             mIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
             mIntent.setDataAndType(FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID +".fileProvider",file), "application/java-archive")
         } else {
             mIntent.setDataAndType(Uri.fromFile(file),"application/java-archive")

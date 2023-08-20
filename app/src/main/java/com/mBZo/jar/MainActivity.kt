@@ -15,6 +15,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.mBZo.jar.R.id
 import com.mBZo.jar.databinding.ActivityMainBinding
+import com.mBZo.jar.tool.attachDynamicColor
 import com.microsoft.appcenter.AppCenter
 import com.microsoft.appcenter.analytics.Analytics
 import com.microsoft.appcenter.crashes.Crashes
@@ -23,7 +24,6 @@ import rikka.layoutinflater.view.LayoutInflaterFactory
 
 
 const val netWorkRoot="https://dev.azure.com/CA0115/e189f55c-a98a-4d73-bc09-4a5b822b9563/_apis/git/repositories/589e5978-bff8-4f4d-a328-c045f4237299/items?path="
-var isPlay: Boolean? = null//play检测
 var onlineInfo = ""
 //更新地址
 val otaUrl={ onlineInfo.substringAfter("更新地址★").substringBefore("☆更新地址") }
@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LayoutInflaterFactory(delegate).addOnViewCreatedListener(WindowInsetsHelper.LISTENER)
         super.onCreate(savedInstanceState)
+        attachDynamicColor()
         binding = ActivityMainBinding.inflate(layoutInflater)
         AppCenter.start(application, AppCenterSecret, Analytics::class.java, Crashes::class.java)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -89,8 +90,10 @@ class MainActivity : AppCompatActivity(){
             binding.homePageTree.isUserInputEnabled = false
         }
 
+        //附加
         binding.homeNav.getOrCreateBadge(id.nav_search).isVisible = false
     }
+
     //按键事件
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val nav: BottomNavigationView = findViewById(id.home_nav)

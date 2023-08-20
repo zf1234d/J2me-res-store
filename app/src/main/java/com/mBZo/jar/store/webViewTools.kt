@@ -13,11 +13,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.mBZo.jar.R
 import com.mBZo.jar.StoreActivity
 import com.mBZo.jar.store.apidecode.lanzouApi
-import com.mBZo.jar.tool.DownloadProgressListener
 import com.mBZo.jar.tool.FileLazy
-import com.mBZo.jar.tool.downloadFile
 import com.mBZo.jar.tool.formatSize
-import com.mBZo.jar.tool.installJar
 import com.mBZo.jar.tool.isDestroy
 import com.mBZo.jar.tool.otherOpen
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -66,7 +63,7 @@ class WebViewListen2Download(activity: Activity, link: String){
         else{
             //这里是正常的下载，获取相关参数，决定是否需要内置下载器
             val spfRecord: SharedPreferences = activity.getSharedPreferences("com.mBZo.jar_preferences", Context.MODE_PRIVATE)
-            val downloader = spfRecord.getBoolean("smartDownloader",true)
+            val downloader = spfRecord.getBoolean("smartDownloader",false)
 
             //下载判断开始，用户是否使用内置下载
             if (downloader.not()) {

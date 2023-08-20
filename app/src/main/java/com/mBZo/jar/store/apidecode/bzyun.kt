@@ -10,9 +10,9 @@ import okhttp3.Request
 import org.json.JSONObject
 
 fun apiDecodeBzyun(activity: StoreActivity, path: String, name: String ,failedNum: Int = 0) {
-    val maxFailed = 3
-    val rootUrl = "https://alist.bzyun.top"
     Thread {
+        val maxFailed = 3
+        val rootUrl = "https://alist.bzyun.top"
         try {
             val requestBody: FormBody = FormBody.Builder()
                 .add("path","/分享/bzyun/J2ME应用商店$path/$name")

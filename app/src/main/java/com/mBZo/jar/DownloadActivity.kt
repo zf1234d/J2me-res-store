@@ -7,12 +7,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mBZo.jar.adapter.DownloadRecyclerAdapter
 import com.mBZo.jar.tool.FileLazy
+import com.mBZo.jar.tool.attachDynamicColor
 import java.io.File
 
 class DownloadActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        attachDynamicColor()
         setContentView(R.layout.activity_download)
         //适配器
         val fileList = FileLazy(filesDir.absolutePath+"/DlLog/").listFiles()
